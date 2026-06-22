@@ -25,6 +25,7 @@ module.exports = async (req, res) => {
       payment_method_types: ['card'],
       customer_email: email,
       client_reference_id: userId, // how the webhook maps this back to a Supabase user
+      allow_promotion_codes: true, // shows a "Add promotion code" box on the Checkout page
       line_items: [
         {
           price: process.env.STRIPE_PRICE_ID, // create this in the Stripe Dashboard, see SETUP.md
