@@ -1,0 +1,9 @@
+{
+  "name": "penance-crm-saas",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "stripe": "^16.12.0",
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}
