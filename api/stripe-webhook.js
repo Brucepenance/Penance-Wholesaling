@@ -16,6 +16,14 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 // used here, server-side, never sent to the browser.
 const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+// The "PENANCEFREE3" promo code (100% off, 3 months) maps to this coupon.
+// When someone redeems it, we automatically stack the "PENANCE30" coupon
+// (30% off, forever) on top of their subscription too — it has no visible
+// effect until the free 3 months run out, at which point the subscription
+// drops to 30% off instead of jumping to full price.
+const FREE_3_MONTHS_COUPON_ID = 'MRg2CSoR';
+const THIRTY_PERCENT_FOREVER_COUPON_ID = 'WydLc2WH';
+
 module.exports.config = { api: { bodyParser: false } };
 
 function buffer(readable) {
@@ -53,6 +61,31 @@ module.exports = async (req, res) => {
             stripe_subscription_id: session.subscription,
           })
           .eq('user_id', userId);
+
+        // Auto-stack the 30%-off-forever coupon if they redeemed the
+        // free-3-months code, so it kicks in automatically afterward.
+        if (session.subscription) {
+          try {
+            const subscription = await stripe.subscriptions.retrieve(session.subscription, {
+              expand: ['discounts'],
+            });
+            const discounts = subscription.discounts || [];
+            const hasFree3 = discounts.some(
+              (d) => d && d.coupon && d.coupon.id === FREE_3_MONTHS_COUPON_ID
+            );
+            const alreadyHas30 = discounts.some(
+              (d) => d && d.coupon && d.coupon.id === THIRTY_PERCENT_FOREVER_COUPON_ID
+            );
+            if (hasFree3 && !alreadyHas30) {
+              const keepExisting = discounts.map((d) => ({ discount: d.id }));
+              await stripe.subscriptions.update(session.subscription, {
+                discounts: [...keepExisting, { coupon: THIRTY_PERCENT_FOREVER_COUPON_ID }],
+              });
+            }
+          } catch (stackErr) {
+            console.error('Failed to auto-stack 30% off coupon', stackErr);
+          }
+        }
         break;
       }
       case 'invoice.payment_failed': {
