@@ -1043,6 +1043,13 @@ function load(){
           }
         }
       }
+    } else {
+      // Nothing stored for this specific account — always reset to a clean
+      // slate here, regardless of whatever was already in memory. Without
+      // this, a brand-new account signed into right after signing out of a
+      // different one (same tab, no page reload) would silently inherit
+      // whatever was still sitting in the `data` variable from before.
+      data={deals:[],buyers:[],realtors:[],contractors:[],managers:[],developers:[],lenders:[],wholesalers:[],reminders:[],contractTemplates:{cash:{raw:'',name:''},sellerfinance:{raw:'',name:''},subjectto:{raw:'',name:''}}};
     }
   }catch(e){}
   render();
@@ -1466,7 +1473,7 @@ function dealForm(d={},editing=false){
   </div>`;
 }
 
-function contactForm(type,d={}){
+function contactForm(type,d={},skipActions){
   let extra='';
   if(type==='buyer'){
     const selectedStrats=d.strategies||(d.strategy?[d.strategy]:[]);
@@ -1519,10 +1526,10 @@ function contactForm(type,d={}){
     </div>
     <div class="fg full"><label>Notes</label><textarea id="c-notes" placeholder="Notes…">${d.notes||''}</textarea></div>
   </div>
-  <div class="modal-actions">
+  ${skipActions?'':`<div class="modal-actions">
     <button class="btn" onclick="closeModal()">Cancel</button>
     <button class="btn primary" onclick="saveContact('${type}')">Save</button>
-  </div>`;
+  </div>`}`;
 }
 
 let selectedMarkets=[];
@@ -1609,6 +1616,117 @@ function saveContact(type){
   save();closeModal();render();
 }
 
+// ── Buybox popup — shown once to new accounts, and reachable any time from
+// Account. Submitting writes to a shared table (any account can insert
+// their own row; only Bruce's account can read it) rather than directly
+// into Bruce's own Buyers contacts, since a different signed-in account has
+// no permission to write into another account's private data. Bruce's app
+// pulls new submissions in on its own — see syncBuyerSubmissions() below.
+function openBuyboxPopup(isInitial){
+  const prefill=data.buybox||{};
+  document.getElementById('modal-title').textContent='Are you a buyer?';
+  document.getElementById('modal-body').innerHTML=`
+    <div style="font-size:13px;color:var(--sub);margin-bottom:14px">${isInitial?"If you're looking to buy investment properties, fill out your buy box below and it'll go straight to our acquisitions team — no obligation.":'Update your buy box any time — each save adds a fresh entry, your previous one stays on file too.'}</div>
+    ${contactForm('buyer',prefill,true)}
+    <div id="buybox-status" style="font-size:12px;margin-top:8px;display:none"></div>
+    ${isInitial?`<div style="font-size:11px;color:var(--sub);margin-top:10px">Not a buyer, or not ready yet? No problem — you can always fill this out (or update it) later by clicking Account.</div>`:''}
+    <div class="modal-actions">
+      ${isInitial?`<button class="btn" onclick="dismissBuyboxPopup()">Not at this time</button>`:`<button class="btn" onclick="closeModal()">Cancel</button>`}
+      <button class="btn primary" id="buybox-save-btn" onclick="submitBuybox(${isInitial?'true':'false'})">Save</button>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+}
+function dismissBuyboxPopup(){
+  data.buyboxPopupShown=true;
+  save();
+  closeModal();
+}
+async function submitBuybox(isInitial){
+  const markets=Array.from(document.querySelectorAll('#c-market-tags .market-tag')).map(t=>t.dataset.market);
+  const strategies=Array.from(document.querySelectorAll('#c-strat-chips .strat-chip')).filter(b=>b.dataset.active==='1').map(b=>b.dataset.strat);
+  const fields={
+    name:v('c-name'),phone:v('c-phone'),email:v('c-email'),
+    strategies,strategyOther:v('c-strat-other'),
+    buybox:v('c-buybox'),buyBoxMinPrice:v('c-buybox-min'),buyBoxMaxPrice:v('c-buybox-max'),
+    markets,notes:v('c-notes')
+  };
+  const statusEl=document.getElementById('buybox-status');
+  if(!fields.name){
+    if(statusEl){statusEl.style.display='block';statusEl.style.color='#e94560';statusEl.textContent='Add a name first.';}
+    return;
+  }
+  const btn=document.getElementById('buybox-save-btn');
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
+  try{
+    if(!supabaseClient||!currentUser)throw new Error('Not signed in.');
+    const{error}=await supabaseClient.from('buyer_submissions').insert({
+      from_user_id:currentUser.id,
+      from_email:currentUser.email,
+      name:fields.name,phone:fields.phone,email:fields.email,
+      strategies:fields.strategies,strategy_other:fields.strategyOther,
+      buybox:fields.buybox,buybox_min:fields.buyBoxMinPrice?+fields.buyBoxMinPrice:null,buybox_max:fields.buyBoxMaxPrice?+fields.buyBoxMaxPrice:null,
+      markets:fields.markets,notes:fields.notes
+    });
+    if(error)throw error;
+    // Keep a local copy too, purely so the form pre-fills with their latest
+    // info next time they open it — the authoritative history lives in
+    // Bruce's Buyers contacts as a fresh entry per submission.
+    data.buybox=fields;
+    data.buyboxPopupShown=true;
+    save();
+    document.getElementById('modal-body').innerHTML=`<div style="text-align:center;padding:24px 0"><div style="font-size:32px;margin-bottom:10px">✅</div><div style="font-size:14px;color:var(--text)">Saved — thanks for sharing your buy box.</div></div><div class="modal-actions"><button class="btn primary" onclick="closeModal()">Done</button></div>`;
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Save';}
+    if(statusEl){statusEl.style.display='block';statusEl.style.color='#e94560';statusEl.textContent="Couldn't save: "+(e.message||e);}
+  }
+}
+// Shown once, right after a brand-new account's first successful load —
+// never again after that, whether they save or dismiss. Guards against
+// showing this retroactively to existing accounts that predate this
+// feature (including Bruce's own) — only triggers for an account that
+// looks genuinely fresh, with no pipeline data of any kind yet.
+function maybeShowBuyboxPopup(){
+  if(data.buyboxPopupShown)return;
+  const looksFresh=!(data.deals&&data.deals.length)&&!(data.buyers&&data.buyers.length)&&!(data.realtors&&data.realtors.length)&&!(data.wholesalers&&data.wholesalers.length);
+  if(!looksFresh){
+    data.buyboxPopupShown=true;
+    save();
+    return;
+  }
+  openBuyboxPopup(true);
+}
+// For Bruce's account only — pulls any not-yet-processed buybox
+// submissions in and adds each as a new Buyers contact, then marks them
+// processed so they're not added again. Silently does nothing for every
+// other account, since the RLS policy only grants them an empty result.
+async function syncBuyerSubmissions(){
+  if(!supabaseClient||!currentUser)return;
+  try{
+    const{data:rows,error}=await supabaseClient.from('buyer_submissions').select('*').eq('processed',false);
+    if(error||!rows||!rows.length)return;
+    if(!data.buyers)data.buyers=[];
+    rows.forEach(row=>{
+      data.buyers.push({
+        name:row.name||'Unnamed buyer',
+        phone:row.phone||'',
+        email:row.email||'',
+        strategies:row.strategies||[],
+        strategyOther:row.strategy_other||'',
+        buybox:row.buybox||'',
+        buyBoxMinPrice:row.buybox_min||'',
+        buyBoxMaxPrice:row.buybox_max||'',
+        markets:row.markets||[],
+        notes:(row.notes?row.notes+'\n\n':'')+'Submitted via in-app buybox form'+(row.from_email?' ('+row.from_email+')':''),
+        created:row.created_at||new Date().toISOString()
+      });
+    });
+    save();
+    render();
+    const ids=rows.map(r=>r.id);
+    await supabaseClient.from('buyer_submissions').update({processed:true}).in('id',ids);
+  }catch(e){}
+}
 function editContact(type,i){
   editIdx=i;editType=type;
   const key=type+'s';
@@ -6870,12 +6988,11 @@ function renderPipelineCalendar(){
 
   // Alerts always reflect the real current date, regardless of which
   // period is being browsed in the calendar above them.
-  let dueToday=0,overdue=0;
+  let dueToday=0;
   Object.keys(dueMap).forEach(key=>{
     const keyDate=new Date(key+'T00:00:00');
     const diffDays=Math.round((todayMidnight-keyDate)/(1000*60*60*24));
     if(diffDays===0)dueToday+=dueMap[key].length;
-    else if(diffDays>0)overdue+=dueMap[key].length;
   });
 
   const toggleHtml=`<div style="display:flex;border:1px solid var(--brd);border-radius:6px;overflow:hidden">
@@ -6954,9 +7071,8 @@ function renderPipelineCalendar(){
           <button onclick="changeCalendarPeriod(1)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);cursor:pointer;font-family:var(--font)">›</button>
         </div>
       </div>
-      ${(dueToday>0||overdue>0)?`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        ${dueToday>0?`<div style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;background:rgba(245,166,35,.12);color:#f5a623">🔔 ${dueToday} due today</div>`:''}
-        ${overdue>0?`<div style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;background:rgba(233,69,96,.12);color:#e94560">⚠ ${overdue} overdue</div>`:''}
+      ${dueToday>0?`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;background:rgba(245,166,35,.12);color:#f5a623">🔔 ${dueToday} due today</div>
       </div>`:''}
       ${bodyHtml}
     </div>
@@ -6967,6 +7083,53 @@ function formatTime12h(t){
   const period=h>=12?'PM':'AM';
   const h12=h%12===0?12:h%12;
   return `${h12}:${String(m).padStart(2,'0')} ${period}`;
+}
+// Builds the three segmented dropdowns for picking a reminder time — same
+// pick-the-hour-then-minute-then-AM/PM motion as a native time input, just
+// with the minute options constrained to :00/:15/:30/:45 rather than every
+// minute (a native <input type="time"> step attribute can't reliably
+// enforce that — most browsers, especially mobile OS pickers, ignore it).
+function reminderHourOptionsHtml(selected){
+  let h12='',isPM=false;
+  if(selected){
+    const [h]=selected.split(':').map(Number);
+    isPM=h>=12;
+    h12=h%12===0?12:h%12;
+  }
+  let html='<option value="">Hour</option>';
+  for(let h=1;h<=12;h++)html+=`<option value="${h}"${h===h12?' selected':''}>${h}</option>`;
+  return html;
+}
+function reminderMinuteOptionsHtml(selected){
+  let m='';
+  if(selected)m=Number(selected.split(':')[1]);
+  let html='<option value="">Min</option>';
+  [0,15,30,45].forEach(mm=>{
+    html+=`<option value="${mm}"${mm===m?' selected':''}>:${String(mm).padStart(2,'0')}</option>`;
+  });
+  return html;
+}
+function reminderAmPmOptionsHtml(selected){
+  let period='';
+  if(selected){
+    const [h]=selected.split(':').map(Number);
+    period=h>=12?'PM':'AM';
+  }
+  return `<option value="">AM/PM</option><option value="AM"${period==='AM'?' selected':''}>AM</option><option value="PM"${period==='PM'?' selected':''}>PM</option>`;
+}
+// Reads the three segmented dropdowns back into a "HH:MM" 24-hour string
+// (the format the rest of the app stores/expects) — empty string if any
+// segment is left unselected, since the time as a whole is optional.
+function getReminderTimeValue(){
+  const hEl=document.getElementById('rem-time-hour');
+  const mEl=document.getElementById('rem-time-min');
+  const pEl=document.getElementById('rem-time-ampm');
+  if(!hEl||!mEl||!pEl)return '';
+  const h12=hEl.value,m=mEl.value,period=pEl.value;
+  if(h12===''||m===''||period==='')return '';
+  let h=+h12%12;
+  if(period==='PM')h+=12;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
 }
 // Same two-click confirm pattern as every other delete button in the app.
 function findContactIndexById(type,id){
@@ -6995,7 +7158,13 @@ function openReminderModal(reminderId,prefillDate){
     <div class="form-grid">
       <div class="fg full"><label>What's this reminder for?</label><input id="rem-title" type="text" placeholder="Call John about the Pembroke offer" value="${editing?(r.title||'').replace(/"/g,'&quot;'):''}"></div>
       <div class="fg"><label>Date</label><input id="rem-date" type="date" value="${editing?r.date:(prefillDate||today)}"></div>
-      <div class="fg"><label>Time (optional)</label><input id="rem-time" type="time" value="${editing?(r.time||''):''}"></div>
+      <div class="fg"><label>Time (optional)</label>
+        <div style="display:flex;gap:6px">
+          <select id="rem-time-hour" style="flex:1">${reminderHourOptionsHtml(editing?(r.time||''):'')}</select>
+          <select id="rem-time-min" style="flex:1">${reminderMinuteOptionsHtml(editing?(r.time||''):'')}</select>
+          <select id="rem-time-ampm" style="flex:1">${reminderAmPmOptionsHtml(editing?(r.time||''):'')}</select>
+        </div>
+      </div>
       <div class="fg full"><label>Linked contact (optional)</label><select id="rem-contact">${contactSelectHtml}</select></div>
       <div class="fg full"><label>Linked property in pipeline (optional)</label><select id="rem-deal">${dealSelectHtml}</select></div>
       <div class="fg full"><label>Notes</label><textarea id="rem-notes" placeholder="Notes…">${editing?(r.notes||''):''}</textarea></div>
@@ -7011,7 +7180,7 @@ function openReminderModal(reminderId,prefillDate){
 function saveReminder(reminderId){
   const title=document.getElementById('rem-title').value.trim();
   const date=document.getElementById('rem-date').value;
-  const time=document.getElementById('rem-time').value;
+  const time=getReminderTimeValue();
   const notes=document.getElementById('rem-notes').value;
   if(!date)return;
 
@@ -7687,6 +7856,12 @@ async function signOut(){
   if(supabaseClient)await supabaseClient.auth.signOut();
   currentUser=null;
   currentSubscription=null;
+  // Reset in-memory data immediately on sign-out — otherwise it lingers
+  // until something else overwrites it, and if the next account signed
+  // into (in the same tab) turns out to have an empty cloud row, that
+  // stale data could get pushed into the new account's storage instead of
+  // starting fresh.
+  data={deals:[],buyers:[],realtors:[],contractors:[],managers:[],developers:[],lenders:[],wholesalers:[],reminders:[],contractTemplates:{cash:{raw:'',name:''},sellerfinance:{raw:'',name:''},subjectto:{raw:'',name:''}}};
   document.getElementById('subscription-overlay').style.display='none';
   document.getElementById('trial-banner').style.display='none';
   document.querySelector('.app').style.display='none';
@@ -7742,6 +7917,8 @@ async function checkAuthAndProceed(){
   updateTopTemplateStatus();
   refreshTopAvatar();
   refreshInboxBadge();
+  syncBuyerSubmissions();
+  maybeShowBuyboxPopup();
   // Quick polling rather than a real-time subscription — good enough to
   // notice a new message within a minute without needing a manual reload.
   if(!inboxPollStarted){
@@ -7817,6 +7994,14 @@ function openAccountModal(){
           <input type="file" id="acct-photo-upload" accept="image/*" style="display:none" onchange="handleAccountPhotoUpload(event)">
         </div>
       </div>
+    </div>
+    <hr class="divider" style="margin:16px 0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Buy box</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px">Looking to buy properties? Fill out or update your buy box any time.</div>
+      </div>
+      <button type="button" onclick="openBuyboxPopup(false)" style="padding:8px 14px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">📋 Buy box</button>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Cancel</button>
