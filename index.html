@@ -682,6 +682,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           </div>
           <div class="fg"><label>Closing costs (%) <span style="color:var(--sub);font-size:10px">preset 2%</span></label><input type="number" id="fl-closing-pct" placeholder="2" value="2" step="0.1" oninput="calcFlip()"></div>
           <div class="fg"><label>Assignment fee ($)</label><input type="number" id="fl-assign-fee" placeholder="10000" oninput="calcFlip()"></div>
+          <div class="fg"><label>Actual offer ($) <span style="color:var(--sub);font-size:10px">overrides the slider — disables it while filled in</span></label><input type="number" id="fl-actual-offer" placeholder="" oninput="calcFlip()"></div>
         </div>
         <hr class="divider" style="margin:14px 0">
         <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Holding costs (estimate)</div>
@@ -866,7 +867,6 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
       <div class="calc-card" style="margin:0">
         <h3>Flip results</h3>
         <div class="mao-box" style="margin-bottom:12px">
-          <div class="mao-row"><span>Avg $/sqft from comps</span><span id="fl-avgcomp">—</span></div>
           <div class="mao-row highlight"><span>ARV (avg $/sqft × subject sqft)</span><span id="fl-arv-calc">—</span></div>
           <div class="mao-row"><span>Repair estimate</span><span id="fl-r-repair">—</span></div>
           <div class="mao-row highlight"><span>MAO</span><span id="fl-mao">—</span></div>
@@ -874,7 +874,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div class="mao-row" id="fl-r-commission-row" style="display:none"><span>Realtor commission (you pay)</span><span id="fl-r-commission">—</span></div>
           <div class="mao-row" id="fl-r-holding-row"><span id="fl-r-holding-label">Holding costs (estimate)</span><span id="fl-r-holding">—</span></div>
           <div style="font-size:10px;color:var(--sub);padding:0 0 6px;margin-top:-4px" id="fl-r-holding-note"></div>
-          <div class="mao-row"><span>Investor profit at MAO</span><span id="fl-profit">—</span></div>
+          <div class="mao-row"><span>Investor profit before fee</span><span id="fl-profit">—</span></div>
           <div class="mao-row highlight"><span>Your assignment fee</span><span id="fl-asgn-actual">—</span></div>
           <div class="mao-row highlight"><span>Your offer to seller</span><span id="fl-offer-final">—</span></div>
           <div class="mao-row highlight"><span>Investor profit (after your fee)</span><span id="fl-profit-final">—</span></div>
@@ -882,13 +882,14 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
             <span>Deal verdict</span><span id="fl-verdict">Fill in fields</span>
           </div>
         </div>
-        <div style="margin-bottom:14px">
+        <div style="margin-bottom:14px" id="fl-fee-split-wrap">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
             <span style="font-size:11px;color:var(--sub)">Where your assignment fee comes from</span>
-            <span id="fl-fee-split-label" style="font-size:12px;font-weight:600;color:var(--acc)">50% offer / 50% profit</span>
+            <span id="fl-fee-split-label" style="font-size:12px;font-weight:600;color:var(--acc)">100% offer / 0% profit</span>
           </div>
-          <input type="range" id="fl-fee-split" min="0" max="100" step="10" value="50" oninput="updateFlipFeeSplitLabel();calcFlip()" style="width:100%;accent-color:var(--acc)">
+          <input type="range" id="fl-fee-split" min="0" max="100" step="10" value="0" oninput="updateFlipFeeSplitLabel();calcFlip()" style="width:100%;accent-color:var(--acc)">
           <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-top:2px"><span>0% — all cuts your offer to seller</span><span>100% — all cuts investor's profit</span></div>
+          <div id="fl-fee-split-disabled-note" style="display:none;font-size:10px;color:var(--sub);margin-top:4px;font-style:italic">Disabled — your actual offer overrides this.</div>
         </div>
         <div class="res-grid">
           <div class="res-box"><div class="res-label">Your offer</div><div class="res-val" id="fl-offer-big">—</div></div>
@@ -3463,7 +3464,7 @@ function calcFlip(){
   const repair=+v('fl-repair')||0;
   const assignFeeInput=roundFee(+v('fl-assign-fee')||0);
   const rawFeeSplit=v('fl-fee-split');
-  const feeSplitPct=(rawFeeSplit===''?50:+rawFeeSplit)/100; // 0 = all cuts offer, 1 = all cuts investor profit
+  const feeSplitPct=(rawFeeSplit===''?0:+rawFeeSplit)/100; // 0 = all cuts offer, 1 = all cuts investor profit
   const closingPct=(+v('fl-closing-pct')||2)/100;
   const commPct=(+v('fl-commission-pct')||0)/100;
   const coverComm=document.getElementById('fl-cover-commission')?.checked||false;
@@ -3521,13 +3522,10 @@ function calcFlip(){
   setEl('fl-calc-arv',calcArv?'$'+calcArv.toLocaleString():'—');
 
   // Update results
-  const avgCompRow=document.getElementById('fl-avgcomp')?.closest('.mao-row');
-  if(avgCompRow)avgCompRow.style.display=isMulti?'none':'flex';
-  setEl('fl-avgcomp',avgPpsf?'$'+Math.round(avgPpsf).toLocaleString()+'/sqft':'—');
   const arvLabelEl=document.getElementById('fl-arv-calc')?.closest('.mao-row')?.querySelector('span');
-  if(arvLabelEl)arvLabelEl.textContent=isMulti?'ARV (income-based, 20% COC)':'ARV (avg $/sqft × subject sqft)';
+  if(arvLabelEl)arvLabelEl.textContent=manualArv?'ARV (manual override)':(isMulti?'ARV (income-based, 20% COC)':'ARV (avg $/sqft × subject sqft)');
   const arvCalcEl=document.getElementById('fl-arv-calc');
-  if(arvCalcEl){arvCalcEl.textContent=calcArv?'$'+calcArv.toLocaleString():(manualArv?'$'+manualArv.toLocaleString()+' (manual)':'—');}
+  if(arvCalcEl){arvCalcEl.textContent=useArv?'$'+useArv.toLocaleString():'—';}
 
   if(!useArv)return;
 
@@ -3539,17 +3537,24 @@ function calcFlip(){
   // investor's profit margin, or some split of both — the slider above
   // decides the proportion. 0% = fee comes entirely off your offer (investor
   // still effectively pays MAO total); 100% = your offer stays at MAO and the
-  // investor's profit absorbs the whole fee instead. Computed up front since
-  // the holding-cost estimate below is based on the actual offer, not MAO.
+  // investor's profit absorbs the whole fee instead.
   const feeFromProfit=roundFee(assignFeeInput*feeSplitPct);
   const feeFromOffer=roundFee(assignFeeInput*(1-feeSplitPct));
   const finalOffer=roundPrice(mao-feeFromOffer);
 
-  // Closing & commission are computed on MAO — the baseline investor cost —
-  // not on the final offer, so they stay consistent regardless of how the
-  // assignment fee gets split below.
-  const closing=sellerCoversClosing?0:mao*closingPct;
-  const commAmt=mao*commPct;
+  // Your actual offer — if you've typed in a real number (because you
+  // negotiated something different than the slider above suggested), that
+  // becomes the authoritative offer for everything below. Otherwise this
+  // just falls back to the slider-computed offer above.
+  const actualOfferInput=+v('fl-actual-offer')||0;
+  const hasActualOffer=actualOfferInput>0;
+  const offerForCalc=hasActualOffer?actualOfferInput:finalOffer;
+
+  // Closing & commission are based on the actual offer (or, lacking one,
+  // the slider-computed offer) — never MAO, since that's just a ceiling,
+  // not what's actually being paid.
+  const closing=sellerCoversClosing?0:offerForCalc*closingPct;
+  const commAmt=offerForCalc*commPct;
   // Commission only counts if buyer covers it
   const commForCalc=coverComm?commAmt*(1-buyerCommPct):0;
 
@@ -3560,29 +3565,37 @@ function calcFlip(){
   // 5% down (so they finance 95%), at a flat 12% annual rate for an
   // assumed 3-month turnaround, plus 2 points (a typical mid-range
   // figure for hard money) — all standard assumptions, not editable inputs.
-  const holdLoanAmt=(finalOffer+repair)*0.95;
+  const holdLoanAmt=(offerForCalc+repair)*0.95;
   const holdInterestEst=holdLoanAmt*0.12/12*3; // 12%/yr for 3 months = 3% of the loan
   const holdPointsEst=holdLoanAmt*0.02; // 2 points, a typical hard-money estimate
   const holdingCosts=roundPrice(holdInterestEst+holdPointsEst);
 
-  const profit=roundPrice(useArv-repair-closing-commForCalc-mao-holdingCosts);
-  const finalProfit=roundPrice(profit-feeFromProfit);
+  // Investor profit is now based on the actual offer (or, lacking one, the
+  // slider-computed offer) rather than MAO directly — entering a real
+  // actual offer changes this number, same as it changes closing costs.
+  // When no actual offer is entered, offerForCalc just equals the
+  // slider-computed finalOffer, so this nets out the same as before; once
+  // an actual offer IS entered, it fully overrides — the fee-split slider's
+  // effect on profit no longer applies on top of it, since the actual
+  // offer is already the real, complete number.
+  const profit=roundPrice(useArv-repair-closing-commForCalc-offerForCalc-holdingCosts);
+  const finalProfit=hasActualOffer?roundPrice(profit-assignFeeInput):roundPrice(profit-feeFromProfit);
 
   setEl('fl-70max','$'+roundPrice(useArv*0.7).toLocaleString());
 
   const closingRow=document.getElementById('fl-r-closing-row');
   if(closingRow)closingRow.style.display=sellerCoversClosing?'none':'flex';
-  setEl('fl-r-closing','$'+Math.round(closing).toLocaleString()+(closingPct?` (${(closingPct*100).toFixed(1)}% of MAO)`:''));
+  setEl('fl-r-closing','$'+Math.round(closing).toLocaleString()+(closingPct?` (${(closingPct*100).toFixed(1)}% of offer)`:''));
   setEl('fl-r-repair','$'+repair.toLocaleString());
 
   const commRow=document.getElementById('fl-r-commission-row');
   if(commRow)commRow.style.display=coverComm&&commAmt?'flex':'none';
   setEl('fl-r-commission','$'+Math.round(commForCalc).toLocaleString());
-  setEl('fl-r-comm-amt',commForCalc?'$'+Math.round(commForCalc).toLocaleString()+` (${(commPct*100).toFixed(1)}% of MAO)`:'—');
+  setEl('fl-r-comm-amt',commForCalc?'$'+Math.round(commForCalc).toLocaleString()+` (${(commPct*100).toFixed(1)}% of offer)`:'—');
 
   setEl('fl-r-holding',holdingCosts?'$'+holdingCosts.toLocaleString()+' (est.)':'$0');
   const holdNoteEl=document.getElementById('fl-r-holding-note');
-  if(holdNoteEl)holdNoteEl.textContent=finalOffer?`Estimate: hard money loan on ${fmtN(holdLoanAmt)} (offer + repairs, 95% LTV) — 3 mo at 12%/yr (${fmtN(holdInterestEst)}) + 2 points (${fmtN(holdPointsEst)})`:'Enter an ARV and repair estimate above to see this estimate.';
+  if(holdNoteEl)holdNoteEl.textContent=offerForCalc?`Estimate: hard money loan on ${fmtN(holdLoanAmt)} (offer + repairs, 95% LTV) — 3 mo at 12%/yr (${fmtN(holdInterestEst)}) + 2 points (${fmtN(holdPointsEst)})`:'Enter an ARV and repair estimate above to see this estimate.';
 
   setEl('fl-mao',mao?'$'+mao.toLocaleString():'$0');
   setEl('fl-profit','$'+profit.toLocaleString());
@@ -3593,12 +3606,14 @@ function calcFlip(){
   if(feeEl)feeEl.textContent=feeStr;
   if(feeBigEl)feeBigEl.textContent=feeStr;
 
-  setEl('fl-offer-final','$'+finalOffer.toLocaleString());
-  setEl('fl-offer-big','$'+finalOffer.toLocaleString());
+  setEl('fl-offer-final','$'+offerForCalc.toLocaleString()+(hasActualOffer?' (your actual offer)':''));
+  setEl('fl-offer-big','$'+offerForCalc.toLocaleString());
   const profitFinalEl=document.getElementById('fl-profit-final');
   if(profitFinalEl){profitFinalEl.textContent='$'+finalProfit.toLocaleString();profitFinalEl.style.color=finalProfit>=0?'#3ab56e':'#e94560';}
   const profitBigEl=document.getElementById('fl-profit-big');
   if(profitBigEl)profitBigEl.textContent='$'+finalProfit.toLocaleString();
+
+  toggleFlipFeeSplitDisabled();
 
   const vEl=document.getElementById('fl-verdict');
   const rEl=document.getElementById('fl-verdict-row');
@@ -3611,6 +3626,18 @@ function updateFlipFeeSplitLabel(){
   const pct=+v('fl-fee-split')||0;
   const labelEl=document.getElementById('fl-fee-split-label');
   if(labelEl)labelEl.textContent=`${100-pct}% offer / ${pct}% profit`;
+}
+// When you've typed in a real actual offer, the fee-split slider has
+// nothing left to decide — your actual offer already is the answer — so
+// it's disabled rather than left active and misleading.
+function toggleFlipFeeSplitDisabled(){
+  const hasActualOffer=(+v('fl-actual-offer')||0)>0;
+  const sliderEl=document.getElementById('fl-fee-split');
+  const wrapEl=document.getElementById('fl-fee-split-wrap');
+  const noteEl=document.getElementById('fl-fee-split-disabled-note');
+  if(sliderEl)sliderEl.disabled=hasActualOffer;
+  if(wrapEl)wrapEl.style.opacity=hasActualOffer?'0.45':'1';
+  if(noteEl)noteEl.style.display=hasActualOffer?'block':'none';
 }
 
 // ── Offer Oven → Deals ─────────────────────────────────────
@@ -3770,7 +3797,8 @@ function collectOvenData(){
     d.flipRehabState={...rehabState};
     d.flipRehabSummary=document.getElementById('fl-rehab-summary')?.innerHTML||'';
     d.flipAssignFee=+v('fl-assign-fee')||0;
-    d.flipFeeSplit=v('fl-fee-split')===''?50:+v('fl-fee-split');
+    d.flipActualOffer=+v('fl-actual-offer')||0;
+    d.flipFeeSplit=v('fl-fee-split')===''?0:+v('fl-fee-split');
     d.flipHoldingCosts=document.getElementById('fl-r-holding')?.textContent||'';
     d.flipOffer=parseFloat((document.getElementById('fl-offer-final')?.textContent||'').replace(/[^0-9.]/g,''))||0;
     d.flipClosingPct=+v('fl-closing-pct')||0;
@@ -3779,7 +3807,10 @@ function collectOvenData(){
     d.flipComps=[];
     for(let i=0;i<compRowCount;i++){
       const addr=v('fc-addr-'+i);
-      if(addr)d.flipComps.push(addr);
+      const beds=v('fc-bed-'+i),sqft=v('fc-sqft-'+i),year=v('fc-year-'+i),dist=v('fc-dist-'+i),price=v('fc-price-'+i);
+      if(addr||beds||sqft||year||dist||price){
+        d.flipComps.push({addr,beds,sqft,year,dist,price});
+      }
     }
     // Multifamily income inputs
     d.flipMfRent=+v('fl-mf-rent')||0;
@@ -3882,10 +3913,10 @@ function clearOven(){
   // Flip inputs
   rehabState={};
   const rehabSumEl2=document.getElementById('fl-rehab-summary');if(rehabSumEl2)rehabSumEl2.style.display='none';
-  ['fl-arv','fl-repair','fl-assign-fee','fl-closing-pct','fl-commission-pct',
+  ['fl-arv','fl-repair','fl-assign-fee','fl-actual-offer','fl-closing-pct','fl-commission-pct',
    'fl-mf-rent','fl-mf-tax','fl-mf-ins','fl-mf-hoa','fl-mf-vacancy','fl-mf-other'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   setV('fl-closing-pct',2);
-  setV('fl-fee-split',50);
+  setV('fl-fee-split',0);
   updateFlipFeeSplitLabel();
   setV('fl-mf-mgmt',10);setV('fl-mf-capex',10);
   resetCompTable();
@@ -5833,7 +5864,7 @@ function buildBuyerSummary(d){
 
   const tableRows=rows.map(([l,vv])=>`<div class="mao-row"><span>${l}</span><span style="font-weight:600">${vv}</span></div>`).join('');
   const compsBlock=(!d.flipIsMulti&&d.flipComps&&d.flipComps.length)
-    ?`<div style="margin-top:10px"><div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Comparable properties</div>${d.flipComps.map(a=>`<div style="font-size:13px;color:var(--text);padding:4px 0">${a.replace(/</g,'&lt;')}</div>`).join('')}</div>`
+    ?`<div style="margin-top:10px"><div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Comparable properties</div>${d.flipComps.map(c=>{const a=typeof c==='string'?c:c.addr;return a?`<div style="font-size:13px;color:var(--text);padding:4px 0">${a.replace(/</g,'&lt;')}</div>`:'';}).join('')}</div>`
     :'';
   return `<div class="mao-box">${tableRows}</div>
     ${compsBlock}
@@ -5915,7 +5946,7 @@ function buildBuyerSummaryText(d){
     if(!d.flipIsMulti&&d.flipComps&&d.flipComps.length){
       lines.push('');
       lines.push('COMPARABLE PROPERTIES');
-      d.flipComps.forEach(a=>lines.push(a));
+      d.flipComps.forEach(c=>{const a=typeof c==='string'?c:c.addr;if(a)lines.push(a);});
     }
   }
   if(d.notes){lines.push('');lines.push('Notes: '+d.notes);}
@@ -6632,7 +6663,9 @@ function renderDealViewFlip(d,content,summary){
         ${dvRow(d.contactRole==='Owner'?'Owner':'Agent',d.agentName)}
         ${dvRow(d.contactRole==='Owner'?'Owner phone':'Agent phone',d.agentPhone)}
         ${d.contactRole==='Owner'?'':dvRow('Brokerage',d.brokerage)}
+        ${d.contactRole==='Owner'?'':dvRow('Brokerage phone',d.brokeragePhone)}
         ${d.contactRole!=='Owner'&&d.agentName2?dvRow('Co-agent',d.agentName2):''}
+        ${d.contactRole!=='Owner'&&d.agentPhone2?dvRow('Co-agent phone',d.agentPhone2):''}
         ${dvRow('Email',d.contactEmail)}
       </div>
     </div>
@@ -6641,7 +6674,6 @@ function renderDealViewFlip(d,content,summary){
     <div class="calc-card" style="margin:0">
       <h3>Flip results</h3>
       <div class="mao-box">
-        ${d.flipIsMulti?'':dvRow('Avg $/sqft from comps',d.flipAvgPpsf||'—')}
         ${dvRow(d.flipIsMulti?'ARV (income-based, 20% COC)':'ARV (avg $/sqft × subject sqft)',d.flipArvCalc,{highlight:true})}
         ${dvRow('Repair estimate','−'+fmt(d.flipRepair))}
         ${d.flipHoldingCosts?dvRow('Holding costs (estimate)','−'+d.flipHoldingCosts):''}
@@ -6738,7 +6770,15 @@ function openInOven(i){
       resetCompTable();
       if(d.flipComps&&d.flipComps.length){
         ensureCompRows(d.flipComps.length);
-        d.flipComps.forEach((addr,i)=>setV('fc-addr-'+i,addr));
+        d.flipComps.forEach((c,i)=>{
+          // Older saved deals stored comps as plain address strings —
+          // still restore those correctly, just with the other fields blank.
+          if(typeof c==='string'){setV('fc-addr-'+i,c);return;}
+          setV('fc-addr-'+i,c.addr||'');setV('fc-bed-'+i,c.beds||'');
+          setV('fc-sqft-'+i,c.sqft||'');setV('fc-year-'+i,c.year||'');
+          setV('fc-dist-'+i,c.dist||'');setV('fc-price-'+i,c.price||'');
+        });
+        calcFlip();
       }
       rehabState={...(d.flipRehabState||{})};
       const rehabSumEl=document.getElementById('fl-rehab-summary');
@@ -6750,7 +6790,8 @@ function openInOven(i){
       setV('fl-mf-ins',d.flipMfIns||'');setV('fl-mf-mgmt',d.flipMfMgmt||10);
       setV('fl-mf-capex',d.flipMfCapex||10);setV('fl-mf-hoa',d.flipMfHoa||'');
       setV('fl-mf-vacancy',d.flipMfVacancy||'');setV('fl-mf-other',d.flipMfOther||'');
-      setV('fl-assign-fee',d.flipAssignFee||'');setV('fl-fee-split',d.flipFeeSplit!==undefined?d.flipFeeSplit:50);
+      setV('fl-assign-fee',d.flipAssignFee||'');setV('fl-fee-split',d.flipFeeSplit!==undefined?d.flipFeeSplit:0);
+      setV('fl-actual-offer',d.flipActualOffer||'');
       updateFlipFeeSplitLabel();
       setV('fl-closing-pct',d.flipClosingPct||'');
       setV('fl-commission-pct',d.flipCommPct||'');
@@ -7253,6 +7294,18 @@ function saveDealNotes(){
 // with a seller, dropped straight into the Notes box so Bruce can type the
 // answer right after each question instead of writing them out by hand.
 function firstCallQuestions(dtype){
+  // Fix & Flip gets its own distinct, shorter template — not the universal
+  // rental-focused list below, which doesn't fit a flip's first-call needs.
+  if(dtype==='Fix & Flip'){
+    return ['=== FIRST CALL QUESTIONS ===',
+      'Roof age (years): ',
+      'Water heater age (years): ',
+      'HVAC / furnace age (years): ',
+      'plumbing: ',
+      'electrical: ',
+      'Reason for selling / timeline to close:'
+    ].join('\n');
+  }
   const universal=[
     'Roof age (years)',
     'Water heater age (years)',
