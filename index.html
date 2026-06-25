@@ -126,6 +126,18 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
     <div id="auth-info" style="display:none;font-size:12px;color:#3ab56e;background:rgba(58,181,110,.1);border:1px solid #3ab56e;border-radius:8px;padding:8px 12px;margin-bottom:14px"></div>
     <div class="fg" style="margin-bottom:12px"><label>Email</label><input type="email" id="auth-email" placeholder="you@example.com" style="width:100%;box-sizing:border-box"></div>
     <div class="fg" style="margin-bottom:18px"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••" style="width:100%;box-sizing:border-box" onkeydown="if(event.key==='Enter')authSubmit()"></div>
+    <div id="auth-signup-fields">
+      <div class="fg" style="margin-bottom:12px"><label>First name</label><input type="text" id="auth-first-name" placeholder="Jane" style="width:100%;box-sizing:border-box"></div>
+      <div class="fg" style="margin-bottom:18px"><label>Last name</label><input type="text" id="auth-last-name" placeholder="Smith" style="width:100%;box-sizing:border-box"></div>
+      <div class="fg" style="margin-bottom:18px">
+        <label>Profile photo (optional)</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+          <img id="auth-photo-preview" style="display:none;width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid var(--brd)">
+          <button type="button" onclick="document.getElementById('auth-photo-upload').click()" style="padding:7px 12px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">Upload photo</button>
+          <input type="file" id="auth-photo-upload" accept="image/*" style="display:none" onchange="handleAuthPhotoUpload(event)">
+        </div>
+      </div>
+    </div>
     <button id="auth-submit-btn" onclick="authSubmit()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:12px">Start Free Trial</button>
     <div style="text-align:center;font-size:12px;color:var(--sub)">
       <span id="auth-toggle-text">Already have an account?</span>
@@ -156,9 +168,18 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
   <div class="tabs">
     <button class="tab active" onclick="switchTab('deals')">Pipeline</button>
     <button class="tab" onclick="switchTab('buyers')">Contacts</button>
-    <button class="tab" onclick="switchTab('oven')">🔥 Offer Oven</button>
+    <button class="tab" onclick="switchTab('oven');clearOven();">🔥 Offer Oven</button>
   </div>
   <button onclick="openTemplateManager()" id="top-template-btn" style="padding:6px 12px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">⚙ Contract Template: <span id="top-template-status">Built-in</span></button>
+  <button onclick="openInbox()" style="position:relative;padding:6px 10px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:15px;cursor:pointer;font-family:var(--font);line-height:1" title="Inbox">
+    📩
+    <span id="inbox-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#e94560;color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;align-items:center;justify-content:center;padding:0 3px">0</span>
+  </button>
+  <button onclick="openAccountModal()" style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">
+    <img id="top-avatar-img" style="display:none;width:20px;height:20px;border-radius:50%;object-fit:cover">
+    <span id="top-avatar-fallback">👤</span>
+    Account
+  </button>
   <button onclick="signOut()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">Sign Out</button>
 </div>
 
@@ -184,6 +205,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
       </table>
     </div>
   </div>
+  <div id="pipeline-calendar"></div>
 </div>
 
 <!-- CONTACTS -->
@@ -268,6 +290,8 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
 <!-- OFFER OVEN -->
 <div id="view-oven" class="view">
 
+  <div style="font-size:11px;color:var(--sub);margin-bottom:10px;text-align:center">* Some numbers are rounded for simplicity — purchase prices, repair estimates, and similar figures may not be exact to the dollar.</div>
+
   <!-- ── PROPERTY DETAILS ── -->
   <div class="calc-card" style="margin-bottom:12px">
     <h3>Property details</h3>
@@ -314,6 +338,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
       <div class="fg"><label>Beds</label><input type="number" id="prop-beds" placeholder="3" min="0"></div>
       <div class="fg"><label>Baths</label><input type="number" id="prop-baths" placeholder="2" min="0" step="0.5"></div>
       <div class="fg"><label>Year built</label><input type="number" id="prop-year" placeholder="1965" min="1800" max="2025"></div>
+      <div class="fg"><label>Days on market</label><input type="number" id="prop-dom" placeholder="14" min="0"></div>
     </div>
     <hr class="divider" style="margin:14px 0">
     <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Contact — realtor or owner</div>
@@ -324,7 +349,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
       <div class="fg"><label>Brokerage phone</label><input type="tel" id="prop-contact-brokerage-phone" placeholder="248-817-2095"></div>
       <div class="fg"><label>Co-agent name</label><input type="text" id="prop-contact-name2" placeholder="Second agent (if any)"></div>
       <div class="fg"><label>Co-agent phone</label><input type="tel" id="prop-contact-phone2" placeholder=""></div>
-      <div class="fg"><label>Role</label><select id="prop-contact-role"><option>Realtor</option><option>Owner</option><option>Wholesaler</option><option>Property manager</option></select></div>
+      <div class="fg"><label>Role</label><select id="prop-contact-role"><option>Realtor</option><option>Owner</option></select></div>
       <div class="fg"><label>Email</label><input type="email" id="prop-contact-email" placeholder="jane@realty.com"></div>
     </div>
     <hr class="divider" style="margin:14px 0">
@@ -378,8 +403,9 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
       <div class="calc-card" style="margin:0">
         <h3>Deal inputs</h3>
         <div class="calc-grid">
-          <div class="fg"><label>Purchase price ($)</label><input type="number" id="sf-price" placeholder="340000" oninput="calcSF()"></div>
-          <div class="fg"><label>Down payment ($)</label><input type="number" id="sf-down" placeholder="17000" oninput="calcSF()"></div>
+          <div class="fg"><label>Purchase price ($)</label><input type="number" id="sf-price" placeholder="340000" oninput="syncDownOnPriceChange();calcSF()"></div>
+          <div class="fg"><label>Down payment ($)</label><input type="number" id="sf-down" placeholder="17000" oninput="syncDownFromDollar()"></div>
+          <div class="fg"><label>Down payment (%)</label><input type="number" id="sf-down-pct" placeholder="10" step="0.1" oninput="syncDownFromPct()"></div>
           <div class="fg"><label>Closing costs (%) <span style="color:var(--sub);font-size:10px">preset 2%</span></label><input type="number" id="sf-closing-pct" placeholder="2" value="2" step="0.1" oninput="calcSF()"></div>
           <div class="fg"><label>Rehab / repairs ($)</label><input type="number" id="sf-rehab" placeholder="0" oninput="calcSF()"></div>
           <div class="fg"><label>Assignment fee ($) <span style="color:var(--sub);font-size:10px">preset $5,000</span></label><input type="number" id="sf-asgn" placeholder="5000" value="5000" oninput="calcSF()"></div>
@@ -420,8 +446,8 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
         <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Monthly income &amp; expenses</div>
         <div class="calc-grid">
           <div class="fg"><label>Gross monthly rent ($)</label><input type="number" id="sf-rent" placeholder="2300" oninput="calcSF();calcConvOnly('sf')"></div>
-          <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="sf-tax" placeholder="50" oninput="calcSF();calcConvOnly('sf')"></div>
-          <div class="fg"><label>Insurance / month ($)</label><input type="number" id="sf-ins" placeholder="150" oninput="calcSF();calcConvOnly('sf')"></div>
+          <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="sf-tax" placeholder="50" oninput="calcSF();calcConvOnly('sf')" onblur="roundTaxInsField(this)"></div>
+          <div class="fg"><label>Insurance / month ($)</label><input type="number" id="sf-ins" placeholder="150" oninput="calcSF();calcConvOnly('sf')" onblur="roundTaxInsField(this)"></div>
           <div class="fg"><label>Management (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sf-mgmt-pct" placeholder="10" value="10" oninput="calcSF()"></div>
           <div class="fg"><label>CapEx &amp; Maintenance (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sf-capex-pct" placeholder="10" value="10" oninput="calcSF()"></div>
         </div>
@@ -469,6 +495,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
             <div class="res-box"><div class="res-label">Monthly payment</div><div class="res-val" id="sf-prelim-pmt">—</div></div>
           </div>
           <div style="margin-top:8px;font-size:11px;color:var(--sub)">Adjust the terms above to refine your actual offer — this is a starting point.</div>
+          <button onclick="applySFPrelimOffer()" style="width:100%;margin-top:10px;padding:8px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">↓ Use this offer</button>
         </div>
         <div class="mao-box" style="margin-bottom:12px">
           <div style="font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Total entry cost</div>
@@ -554,8 +581,8 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
         <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Monthly income &amp; expenses</div>
         <div class="calc-grid">
           <div class="fg"><label>Gross monthly rent ($)</label><input type="number" id="sub-rent" placeholder="1200" oninput="calcSub();calcConvOnly('sub')"></div>
-          <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="sub-tax" placeholder="150" oninput="calcSub();calcConvOnly('sub')"></div>
-          <div class="fg"><label>Insurance / month ($)</label><input type="number" id="sub-ins" placeholder="100" oninput="calcSub();calcConvOnly('sub')"></div>
+          <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="sub-tax" placeholder="150" oninput="calcSub();calcConvOnly('sub')" onblur="roundTaxInsField(this)"></div>
+          <div class="fg"><label>Insurance / month ($)</label><input type="number" id="sub-ins" placeholder="100" oninput="calcSub();calcConvOnly('sub')" onblur="roundTaxInsField(this)"></div>
           <div class="fg"><label>Management (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sub-mgmt-pct" placeholder="10" value="10" oninput="calcSub();calcConvOnly('sub')"></div>
           <div class="fg"><label>CapEx &amp; Maintenance (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sub-capex-pct" placeholder="10" value="10" oninput="calcSub();calcConvOnly('sub')"></div>
         </div>
@@ -648,14 +675,17 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div class="fg" style="grid-column:1/-1">
             <label>Repair estimate ($)</label>
             <div style="display:flex;gap:8px;align-items:center">
-              <input type="number" id="fl-repair" placeholder="40000" oninput="calcFlip()" style="flex:1">
+              <input type="number" id="fl-repair" placeholder="40000" oninput="calcFlip()" onblur="roundRepairField(this)" style="flex:1">
               <button type="button" onclick="openRehabChecklist()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--acc);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">🛠️ Checklist</button>
             </div>
             <div id="fl-rehab-summary" style="font-size:11px;color:var(--sub);margin-top:6px;display:none"></div>
           </div>
-          <div class="fg"><label>Closing costs (%)</label><input type="number" id="fl-closing-pct" placeholder="2" step="0.1" oninput="calcFlip()"></div>
-          <div class="fg"><label>Your actual offer ($)</label><input type="number" id="fl-offer" placeholder="" oninput="calcFlip()"></div>
+          <div class="fg"><label>Closing costs (%) <span style="color:var(--sub);font-size:10px">preset 2%</span></label><input type="number" id="fl-closing-pct" placeholder="2" value="2" step="0.1" oninput="calcFlip()"></div>
+          <div class="fg"><label>Assignment fee ($)</label><input type="number" id="fl-assign-fee" placeholder="10000" oninput="calcFlip()"></div>
         </div>
+        <hr class="divider" style="margin:14px 0">
+        <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Holding costs (estimate)</div>
+        <div style="font-size:11px;color:var(--sub)">Calculated automatically, no inputs needed — a standard hard money assumption: 95% loan-to-cost on your offer + repairs (5% down to the lender), 12%/yr for an assumed 3-month turnaround, plus 2 points. Property taxes, insurance, and other holding expenses are already covered in your numbers elsewhere, so this is just the financing estimate. See the breakdown in Flip results below.</div>
         <hr class="divider" style="margin:14px 0">
         <div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">Realtor &amp; closing options</div>
         <div class="calc-grid">
@@ -799,10 +829,11 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
               </tr>
             </tbody>
           </table>
-          <div style="display:flex;gap:20px;padding:10px 12px;background:var(--bg2);border-top:1px solid var(--brd);font-size:12px;flex-wrap:wrap">
+          <div style="display:flex;gap:20px;padding:10px 12px;background:var(--bg2);border-top:1px solid var(--brd);font-size:12px;flex-wrap:wrap;align-items:center">
             <span style="color:var(--sub)">Avg $/sqft: <span id="fl-avg-ppsf" style="color:#f5a623;font-weight:600">—</span></span>
             <span style="color:var(--sub)">Subject sqft: <span id="fl-subj-sqft" style="color:var(--text);font-weight:600">—</span></span>
             <span style="color:var(--sub)">Calculated ARV: <span id="fl-calc-arv" style="color:#3ab56e;font-weight:600">—</span></span>
+            <button onclick="applyFlipArv()" style="padding:6px 12px;border-radius:6px;border:none;background:var(--acc);color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">↓ Use this ARV</button>
           </div>
         </div>
         </div>
@@ -812,8 +843,8 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div style="font-size:11px;color:var(--sub);margin-bottom:12px">Multifamily ARV = max conventional purchase price at 20% COC (7% int, 30yr, 20% down, 2% closing, $5k assignment fee buffer)</div>
           <div class="calc-grid">
             <div class="fg"><label>Potential gross monthly rent ($)</label><input type="number" id="fl-mf-rent" placeholder="3200" oninput="calcFlip()"></div>
-            <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="fl-mf-tax" placeholder="250" oninput="calcFlip()"></div>
-            <div class="fg"><label>Insurance / month ($)</label><input type="number" id="fl-mf-ins" placeholder="150" oninput="calcFlip()"></div>
+            <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="fl-mf-tax" placeholder="250" oninput="calcFlip()" onblur="roundTaxInsField(this)"></div>
+            <div class="fg"><label>Insurance / month ($)</label><input type="number" id="fl-mf-ins" placeholder="150" oninput="calcFlip()" onblur="roundTaxInsField(this)"></div>
             <div class="fg"><label>Management (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="fl-mf-mgmt" placeholder="10" value="10" oninput="calcFlip()"></div>
             <div class="fg"><label>CapEx &amp; Maintenance (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="fl-mf-capex" placeholder="10" value="10" oninput="calcFlip()"></div>
           </div>
@@ -825,9 +856,10 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
               <div class="fg"><label>Other / month ($)</label><input type="number" id="fl-mf-other" placeholder="0" oninput="calcFlip()"></div>
             </div>
           </details>
-          <div style="display:flex;gap:20px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);margin-top:12px;font-size:12px;flex-wrap:wrap">
+          <div style="display:flex;gap:20px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius);margin-top:12px;font-size:12px;flex-wrap:wrap;align-items:center">
             <span style="color:var(--sub)">Monthly NOI: <span id="fl-mf-noi" style="color:#f5a623;font-weight:600">—</span></span>
             <span style="color:var(--sub)">Income-based ARV: <span id="fl-mf-arv" style="color:#3ab56e;font-weight:600">—</span></span>
+            <button onclick="applyFlipArv()" style="padding:6px 12px;border-radius:6px;border:none;background:var(--acc);color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">↓ Use this ARV</button>
           </div>
         </div>
       </div>
@@ -840,14 +872,26 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div class="mao-row highlight"><span>MAO</span><span id="fl-mao">—</span></div>
           <div class="mao-row" id="fl-r-closing-row"><span>Closing costs</span><span id="fl-r-closing">—</span></div>
           <div class="mao-row" id="fl-r-commission-row" style="display:none"><span>Realtor commission (you pay)</span><span id="fl-r-commission">—</span></div>
+          <div class="mao-row" id="fl-r-holding-row"><span id="fl-r-holding-label">Holding costs (estimate)</span><span id="fl-r-holding">—</span></div>
+          <div style="font-size:10px;color:var(--sub);padding:0 0 6px;margin-top:-4px" id="fl-r-holding-note"></div>
           <div class="mao-row"><span>Investor profit at MAO</span><span id="fl-profit">—</span></div>
-          <div class="mao-row highlight"><span>Your assignment fee (actual offer − MAO)</span><span id="fl-asgn-actual">—</span></div>
+          <div class="mao-row highlight"><span>Your assignment fee</span><span id="fl-asgn-actual">—</span></div>
+          <div class="mao-row highlight"><span>Your offer to seller</span><span id="fl-offer-final">—</span></div>
+          <div class="mao-row highlight"><span>Investor profit (after your fee)</span><span id="fl-profit-final">—</span></div>
           <div class="mao-total" id="fl-verdict-row" style="display:flex;justify-content:space-between">
             <span>Deal verdict</span><span id="fl-verdict">Fill in fields</span>
           </div>
         </div>
+        <div style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:11px;color:var(--sub)">Where your assignment fee comes from</span>
+            <span id="fl-fee-split-label" style="font-size:12px;font-weight:600;color:var(--acc)">50% offer / 50% profit</span>
+          </div>
+          <input type="range" id="fl-fee-split" min="0" max="100" step="10" value="50" oninput="updateFlipFeeSplitLabel();calcFlip()" style="width:100%;accent-color:var(--acc)">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-top:2px"><span>0% — all cuts your offer to seller</span><span>100% — all cuts investor's profit</span></div>
+        </div>
         <div class="res-grid">
-          <div class="res-box"><div class="res-label">Your MAO</div><div class="res-val" id="fl-mao-big">—</div></div>
+          <div class="res-box"><div class="res-label">Your offer</div><div class="res-val" id="fl-offer-big">—</div></div>
           <div class="res-box"><div class="res-label">Investor profit</div><div class="res-val" id="fl-profit-big">—</div></div>
           <div class="res-box"><div class="res-label">Your assignment fee</div><div class="res-val" id="fl-fee-big">—</div></div>
         </div>
@@ -928,15 +972,23 @@ const US_CITIES=[
 "Cheyenne, WY","Casper, WY"
 ];
 
-const STORAGE_KEY='penance-crm-v3';
-let data={deals:[],buyers:[],realtors:[],contractors:[],managers:[],developers:[],lenders:[],wholesalers:[],contractTemplates:{cash:{raw:'',name:''},sellerfinance:{raw:'',name:''},subjectto:{raw:'',name:''}}};
+// Namespaced per signed-in user — NOT a single global key. localStorage is
+// shared by browser, not by account, so a global key here would let one
+// account's cached data leak into a different account that signs in on the
+// same browser (this was a real bug: a brand-new account with an empty
+// cloud row would adopt and then push up a previous account's leftover
+// local cache). Keying by user ID makes that structurally impossible.
+function storageKey(){
+  return 'penance-crm-v3-'+(currentUser&&currentUser.id?currentUser.id:'anon');
+}
+let data={deals:[],buyers:[],realtors:[],contractors:[],managers:[],developers:[],lenders:[],wholesalers:[],reminders:[],contractTemplates:{cash:{raw:'',name:''},sellerfinance:{raw:'',name:''},subjectto:{raw:'',name:''}}};
 let editIdx=null,editType=null,contactTab='buyers';
 let dealsViewMode='kanban';
 
 let storageSaveFailed=false;
 function save(){
   try{
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    localStorage.setItem(storageKey(),JSON.stringify(data));
     storageSaveFailed=false;
   }catch(e){
     // This is the one error we must never swallow silently — if it fires,
@@ -960,7 +1012,7 @@ function save(){
 }
 function load(){
   try{
-    const r=localStorage.getItem(STORAGE_KEY);
+    const r=localStorage.getItem(storageKey());
     if(r){
       const parsed=JSON.parse(r);
       // migrate old format that had separate leads array
@@ -977,6 +1029,7 @@ function load(){
         if(!data.developers)data.developers=[];
         if(!data.lenders)data.lenders=[];
         if(!data.wholesalers)data.wholesalers=[];
+        if(!data.reminders)data.reminders=[];
         if(!data.contractTemplates){
           data.contractTemplates={cash:{raw:'',name:''},sellerfinance:{raw:'',name:''},subjectto:{raw:'',name:''}};
           // Migrate the old single global custom template (if one was saved) forward
@@ -996,13 +1049,6 @@ function load(){
   updateTopTemplateStatus();
 }
 
-function switchTab(t){
-  const tabs=['deals','buyers','oven'];
-  document.querySelectorAll('.top-bar .tab').forEach((el,i)=>el.classList.toggle('active',tabs[i]===t));
-  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
-  document.getElementById('view-'+t).classList.add('active');
-}
-
 function setDealsView(mode){
   dealsViewMode=mode;
   document.getElementById('deals-kanban').style.display=mode==='kanban'?'block':'none';
@@ -1019,18 +1065,55 @@ function switchTab(t){
   document.getElementById('view-'+t).classList.add('active');
 }
 
-function render(){renderMetrics();renderPipeline();renderAllContacts();}
+function render(){renderMetrics();renderPipeline();renderAllContacts();renderPipelineCalendar();}
 function fmt(n){return n?'$'+Number(n).toLocaleString():'—';}
 function fmtN(n){return(n>=0?'$':'−$')+Math.abs(Math.round(n)).toLocaleString();}
+// Real estate numbers should look like real estate numbers, not the output
+// of a spreadsheet — round to the nearest $500. Where a number is a ceiling
+// meant to hit a target return (a 20%-COC suggested offer, an MAO), pass
+// floor=true so the actual return on the rounded number never dips below
+// the target — a little conservative is fine, a little short isn't.
+function roundPrice(n,floor){
+  if(!n)return 0;
+  return floor?Math.floor(n/500)*500:Math.round(n/500)*500;
+}
+// Assignment fees round to the nearest $100 — a finer grain than full
+// purchase prices, since fees are themselves smaller numbers.
+function roundFee(n){
+  return Math.round((n||0)/100)*100;
+}
+// Tax/insurance round UP to the nearest $25 — applied on blur (not every
+// keystroke, which would be distracting mid-type) for manual entry, and
+// immediately when Quick Import fills these fields in.
+function roundTaxInsField(el){
+  if(!el||el.value==='')return;
+  const rounded=Math.ceil(+el.value/25)*25;
+  if(rounded!==+el.value){
+    el.value=rounded;
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+}
+// Estimated repairs round UP to the nearest $1,000 — same blur-based
+// approach, applies whether typed manually or filled by the rehab checklist.
+function roundRepairField(el){
+  if(!el||el.value==='')return;
+  const rounded=Math.ceil(+el.value/1000)*1000;
+  if(rounded!==+el.value){
+    el.value=rounded;
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+}
 function setEl(id,txt){const el=document.getElementById(id);if(el)el.textContent=txt;}
 
 function renderMetrics(){
   const active=data.deals.filter(d=>d.stage!=='Dead'&&d.stage!=='Assigned / closed');
   const closed=data.deals.filter(d=>d.stage==='Assigned / closed');
   // Only counts toward Fees earned once payment is actually confirmed via the
-  // "Payment received" toggle — reaching Assigned/Closed alone doesn't mean
-  // the money is in hand yet.
-  const fees=data.deals.filter(d=>d.paymentReceived).reduce((s,d)=>s+(resolveAssignmentFee(d)||0),0);
+  // "Payment received" toggle AND the deal is still currently sitting in
+  // Assigned/Closed — paymentReceived itself never gets cleared if a deal
+  // moves back to an earlier stage (that history is preserved), but it
+  // shouldn't keep contributing to this metric once it's no longer there.
+  const fees=data.deals.filter(d=>d.paymentReceived&&d.stage==='Assigned / closed').reduce((s,d)=>s+(resolveAssignmentFee(d)||0),0);
   const totalContacts=(data.buyers||[]).length+(data.realtors||[]).length+(data.contractors||[]).length+(data.managers||[]).length+(data.developers||[]).length+(data.lenders||[]).length+(data.wholesalers||[]).length;
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="metric-label">Total deals</div><div class="metric-val">${data.deals.length}</div></div>
@@ -1061,17 +1144,6 @@ function emptyRow(cols,msg){return`<tr><td colspan="${cols}" class="empty-state"
 
 function renderAllContacts(){renderBuyers();renderRealtors();renderContractors();renderManagers();renderDevelopers();renderLenders();renderWholesalers();}
 
-function renderBuyers(){
-  const tb=document.getElementById('buyers-body');if(!tb)return;
-  if(!(data.buyers||[]).length){tb.innerHTML=emptyRow(8,'No buyers yet — add your first cash buyer.');return;}
-  tb.innerHTML=(data.buyers||[]).map((b,i)=>`<tr>
-    <td style="font-weight:600">${b.name||'—'}</td><td>${b.phone||'—'}</td><td>${b.email||'—'}</td>
-    <td style="max-width:140px">${(b.markets||[]).join(', ')||'—'}</td><td style="max-width:160px">${buyerStrategyDisplay(b)}</td>
-    <td>${b.buybox||'—'}</td>
-    <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">${b.notes||'—'}</td>
-    <td><button class="delete-btn" onclick="del('buyers',${i})">${pendingDelete==='buyers-'+i?'Confirm?':'✕'}</button></td>
-  </tr>`).join('');
-}
 // ── Auto-save realtor contact from a saved deal ─────────────
 function saveRealtorFromCurrentDeal(){
   if(currentDealIdx===null)return;
@@ -1153,65 +1225,73 @@ function buyerStrategyDisplay(b){
 function renderRealtors(){
   const tb=document.getElementById('realtors-body');if(!tb)return;
   if(!(data.realtors||[]).length){tb.innerHTML=emptyRow(8,'No realtors yet.');return;}
-  tb.innerHTML=(data.realtors||[]).map((r,i)=>`<tr>
+  tb.innerHTML=(data.realtors||[]).map((r,i)=>`<tr onclick="openContactCard('realtor',${i})" style="cursor:pointer">
     <td style="font-weight:600">${r.name||'—'}</td><td>${r.phone||'—'}</td><td>${r.email||'—'}</td>
     <td>${r.brokerage||'—'}</td><td style="max-width:140px">${(r.markets||[]).join(', ')||'—'}</td>
     <td style="max-width:160px;font-size:11px;color:var(--sub)">${(r.properties||[]).join(', ')||'—'}</td>
     <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">${r.notes||'—'}${r.referredBy?' · Ref by '+r.referredBy:''}</td>
-    <td><button class="delete-btn" onclick="del('realtors',${i})">${pendingDelete==='realtors-'+i?'Confirm?':'✕'}</button></td>
+    <td><button class="delete-btn" onclick="event.stopPropagation();del('realtors',${i})">${pendingDelete==='realtors-'+i?'Confirm?':'✕'}</button></td>
   </tr>`).join('');
 }
 function renderContractors(){
   const tb=document.getElementById('contractors-body');if(!tb)return;
   if(!(data.contractors||[]).length){tb.innerHTML=emptyRow(7,'No contractors yet.');return;}
-  tb.innerHTML=(data.contractors||[]).map((c,i)=>`<tr>
+  tb.innerHTML=(data.contractors||[]).map((c,i)=>`<tr onclick="openContactCard('contractor',${i})" style="cursor:pointer">
     <td style="font-weight:600">${c.name||'—'}</td><td>${c.phone||'—'}</td><td>${c.email||'—'}</td>
     <td>${c.specialty||'—'}</td><td style="max-width:140px">${(c.markets||[]).join(', ')||'—'}</td>
     <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">${c.notes||'—'}</td>
-    <td><button class="delete-btn" onclick="del('contractors',${i})">${pendingDelete==='contractors-'+i?'Confirm?':'✕'}</button></td>
+    <td><button class="delete-btn" onclick="event.stopPropagation();del('contractors',${i})">${pendingDelete==='contractors-'+i?'Confirm?':'✕'}</button></td>
   </tr>`).join('');
 }
 function renderManagers(){
   const tb=document.getElementById('managers-body');if(!tb)return;
   if(!(data.managers||[]).length){tb.innerHTML=emptyRow(8,'No property managers yet.');return;}
-  tb.innerHTML=(data.managers||[]).map((m,i)=>`<tr>
+  tb.innerHTML=(data.managers||[]).map((m,i)=>`<tr onclick="openContactCard('manager',${i})" style="cursor:pointer">
     <td style="font-weight:600">${m.name||'—'}</td><td>${m.phone||'—'}</td><td>${m.email||'—'}</td>
     <td>${m.company||'—'}</td><td style="max-width:130px">${(m.markets||[]).join(', ')||'—'}</td>
     <td>${m.fee?m.fee+'%':'—'}</td>
     <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">${m.notes||'—'}</td>
-    <td><button class="delete-btn" onclick="del('managers',${i})">${pendingDelete==='managers-'+i?'Confirm?':'✕'}</button></td>
+    <td><button class="delete-btn" onclick="event.stopPropagation();del('managers',${i})">${pendingDelete==='managers-'+i?'Confirm?':'✕'}</button></td>
   </tr>`).join('');
 }
 function renderDevelopers(){
   const tb=document.getElementById('developers-body');if(!tb)return;
   if(!(data.developers||[]).length){tb.innerHTML=emptyRow(8,'No developers yet.');return;}
-  tb.innerHTML=(data.developers||[]).map((d,i)=>`<tr>
+  tb.innerHTML=(data.developers||[]).map((d,i)=>`<tr onclick="openContactCard('developer',${i})" style="cursor:pointer">
     <td style="font-weight:600">${d.name||'—'}</td><td>${d.phone||'—'}</td><td>${d.email||'—'}</td>
     <td>${d.company||'—'}</td><td style="max-width:120px">${(d.markets||[]).join(', ')||'—'}</td>
     <td>${d.focus||'—'}</td>
     <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">${d.notes||'—'}</td>
-    <td><button class="delete-btn" onclick="del('developers',${i})">${pendingDelete==='developers-'+i?'Confirm?':'✕'}</button></td>
+    <td><button class="delete-btn" onclick="event.stopPropagation();del('developers',${i})">${pendingDelete==='developers-'+i?'Confirm?':'✕'}</button></td>
   </tr>`).join('');
 }
 function renderLenders(){
   const tb=document.getElementById('lenders-body');if(!tb)return;
   if(!(data.lenders||[]).length){tb.innerHTML=emptyRow(8,'No lenders yet.');return;}
-  tb.innerHTML=(data.lenders||[]).map((l,i)=>`<tr>
+  tb.innerHTML=(data.lenders||[]).map((l,i)=>`<tr onclick="openContactCard('lender',${i})" style="cursor:pointer">
     <td style="font-weight:600">${l.name||'—'}</td><td>${l.phone||'—'}</td><td>${l.email||'—'}</td>
     <td>${l.company||'—'}</td><td>${l.lendingtype||'—'}</td>
     <td style="max-width:130px">${(l.markets||[]).join(', ')||'—'}</td>
     <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">${l.notes||'—'}</td>
-    <td><button class="delete-btn" onclick="del('lenders',${i})">${pendingDelete==='lenders-'+i?'Confirm?':'✕'}</button></td>
+    <td><button class="delete-btn" onclick="event.stopPropagation();del('lenders',${i})">${pendingDelete==='lenders-'+i?'Confirm?':'✕'}</button></td>
   </tr>`).join('');
 }
 function renderWholesalers(){
   const tb=document.getElementById('wholesalers-body');if(!tb)return;
-  if(!(data.wholesalers||[]).length){tb.innerHTML=emptyRow(6,'No wholesalers yet.');return;}
-  tb.innerHTML=(data.wholesalers||[]).map((w,i)=>`<tr>
+  const bruceRow=`<tr onclick="openBruceContactCard()" style="cursor:pointer;background:rgba(58,181,110,.08)">
+    <td style="font-weight:600">⭐ Bruce Penance</td>
+    <td style="color:var(--sub);font-style:italic">via app only</td>
+    <td style="color:var(--sub);font-style:italic">via app only</td>
+    <td style="max-width:130px">All markets</td>
+    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">JV / wholesale deals — reach out anytime</td>
+    <td><button onclick="event.stopPropagation();openMessageBruceModal()" style="padding:5px 10px;border-radius:6px;border:none;background:var(--acc);color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">📨 Message</button></td>
+  </tr>`;
+  if(!(data.wholesalers||[]).length){tb.innerHTML=bruceRow+emptyRow(6,'No other wholesalers yet.');return;}
+  tb.innerHTML=bruceRow+(data.wholesalers||[]).map((w,i)=>`<tr onclick="openContactCard('wholesaler',${i})" style="cursor:pointer">
     <td style="font-weight:600">${w.name||'—'}</td><td>${w.phone||'—'}</td><td>${w.email||'—'}</td>
     <td style="max-width:130px">${(w.markets||[]).join(', ')||'—'}</td>
     <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">${w.notes||'—'}</td>
-    <td><button class="delete-btn" onclick="del('wholesalers',${i})">${pendingDelete==='wholesalers-'+i?'Confirm?':'✕'}</button></td>
+    <td><button class="delete-btn" onclick="event.stopPropagation();del('wholesalers',${i})">${pendingDelete==='wholesalers-'+i?'Confirm?':'✕'}</button></td>
   </tr>`).join('');
 }
 
@@ -1257,18 +1337,20 @@ function openStageView(stage){
     return `
     <div onclick="closeStageView();openDealView(${i})" class="deal-card ${d.dtype?dtypeClass(d.dtype):''}" style="cursor:pointer;margin:0;position:relative">
       ${isFollowUpDue(d)?'<div style="position:absolute;top:-8px;right:-8px;background:#e94560;color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px rgba(0,0,0,.3)">1</div>':''}
+      ${stage==='Dead'?`<button onclick="event.stopPropagation();deleteDeadDeal(${i},'${stage.replace(/'/g,"\\'")}')" style="position:absolute;top:-8px;left:-8px;background:${pendingDelete==='deals-'+i?'#e94560':'var(--bg2)'};color:${pendingDelete==='deals-'+i?'#fff':'var(--sub)'};border:1px solid var(--brd);font-size:${pendingDelete==='deals-'+i?'9px':'12px'};font-weight:700;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 ${pendingDelete==='deals-'+i?'6px':'0'};min-width:20px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);font-family:var(--font)">${pendingDelete==='deals-'+i?'Confirm?':'✕'}</button>`:''}
       ${dtypeBadge(d.dtype)}
       ${renderPhotoCarousel(i,d.photos,100)}
       <div class="deal-addr">${d.address||'No address'}</div>
       ${marketLine}
       ${isClosedCard?`<div class="deal-fee">Fee ${fmt(resolveAssignmentFee(d))}</div>`:`
       ${d.listPrice?`<div class="deal-arv">Ask ${fmt(d.listPrice)}</div>`:''}
+      ${liveDaysOnMarket(d)!==null&&domStillRelevant(d.stage)?`<div class="deal-fee">🏷 ${liveDaysOnMarket(d)}d on market</div>`:''}
       ${d.ovenMode==='sf'&&d.sfPrice?`<div class="deal-fee">SF offer ${fmt(d.sfPrice)}</div>`:''}
       ${d.ovenMode==='sub'&&d.subMaxEntry?`<div class="deal-fee">Entry ${fmt(d.subMaxEntry)}</div>`:''}
       ${d.ovenMode==='flip'&&d.flipMao?`<div class="deal-fee">MAO ${fmt(d.flipMao)}</div>`:''}
       ${d.loi?`<div style="font-size:10px;color:var(--acc);margin-top:6px">📄 LOI generated</div>`:''}
       ${d.contractSigned?`<div style="font-size:10px;color:#3ab56e;margin-top:6px">📝 Contract signed</div>`:''}`}
-      ${d.contractSigned&&inspectionDaysLeft(d)!==null?(function(){const l=inspectionDaysLeft(d);const c=l>3?'#3ab56e':l>0?'#f5a623':l===0?'#f5a623':'#e94560';const t=l>0?l+'d left':l===0?'Last day':'Expired';return `<div style="font-size:10px;color:${c};margin-top:4px;font-weight:600">🔍 Inspection: ${t}</div>`;})():''}
+      ${d.contractSigned&&d.stage==='Under contract'&&inspectionDaysLeft(d)!==null?(function(){const l=inspectionDaysLeft(d);const c=l>3?'#3ab56e':l>0?'#f5a623':l===0?'#f5a623':'#e94560';const t=l>0?l+'d left':l===0?'Last day':'Expired';return `<div style="font-size:10px;color:${c};margin-top:4px;font-weight:600">🔍 Inspection: ${t}</div>`;})():''}
       ${d.assignedBuyers&&d.assignedBuyers.length?`<div style="font-size:10px;color:var(--acc);margin-top:4px">👤 ${d.assignedBuyers.length} buyer${d.assignedBuyers.length!==1?'s':''} assigned</div>`:''}
       ${stage==='Follow up'&&d.followUpSince?`<div style="font-size:18px;font-weight:700;color:${daysSince(d.followUpSince)>=7?'#e94560':daysSince(d.followUpSince)>=3?'#f5a623':'#3ab56e'};margin-top:8px">⏱ ${daysSince(d.followUpSince)} day${daysSince(d.followUpSince)!==1?'s':''} <span style="font-size:11px;font-weight:500;color:var(--sub)">since contact</span></div>`:''}
     </div>`;
@@ -1278,6 +1360,13 @@ function openStageView(stage){
 function closeStageView(){
   document.getElementById('stage-view-overlay').style.display='none';
   switchTab('deals');
+}
+// Delete button on Dead/Rejected cards — reuses the same del() confirm-on-
+// second-click safety as everywhere else, then refreshes the open stage
+// view grid in place (render() alone doesn't touch this overlay).
+function deleteDeadDeal(i,stage){
+  del('deals',i);
+  openStageView(stage);
 }
 
 function pillClass(s){
@@ -1309,7 +1398,7 @@ function renderDealsTable(){
 function renderBuyers(){
   const tb=document.getElementById('buyers-body');
   if(!data.buyers.length){tb.innerHTML=`<tr><td colspan="8" class="empty-state"><div style="font-size:1.5rem">🏦</div><p>No buyers yet — start building your list.</p></td></tr>`;return;}
-  tb.innerHTML=data.buyers.map((b,i)=>`<tr>
+  tb.innerHTML=data.buyers.map((b,i)=>`<tr onclick="openContactCard('buyer',${i})" style="cursor:pointer">
     <td style="font-weight:600">${b.name||'—'}</td>
     <td>${b.phone||'—'}</td>
     <td>${b.email||'—'}</td>
@@ -1317,7 +1406,7 @@ function renderBuyers(){
     <td>${buyerStrategyDisplay(b)}</td>
     <td>${fmt(b.budget)}</td>
     <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--sub)">${b.notes||'—'}</td>
-    <td><button onclick="editContact('buyer',${i})" style="padding:5px 10px;border-radius:6px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);margin-right:4px">✏️</button><button class="delete-btn" onclick="del('buyers',${i})">${pendingDelete==='buyers-'+i?'Confirm?':'✕'}</button></td>
+    <td><button onclick="event.stopPropagation();editContact('buyer',${i})" style="padding:5px 10px;border-radius:6px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);margin-right:4px">✏️</button><button class="delete-btn" onclick="event.stopPropagation();del('buyers',${i})">${pendingDelete==='buyers-'+i?'Confirm?':'✕'}</button></td>
   </tr>`).join('');
 }
 
@@ -1362,7 +1451,13 @@ function dealForm(d={},editing=false){
     <div class="fg"><label>Your offer / contract price ($)</label><input id="f-offer" type="number" placeholder="55000" value="${d.offer||''}"></div>
     <div class="fg"><label>Assignment fee ($)</label><input id="f-fee" type="number" placeholder="10000" value="${d.fee||''}"></div>
     <div class="fg"><label>Repair estimate ($)</label><input id="f-rep" type="number" placeholder="25000" value="${d.repair||''}"></div>
-    <div class="fg full"><label>Notes</label><textarea id="f-notes" placeholder="Motivation level, condition, seller timeline…">${d.notes||''}</textarea></div>
+    <div class="fg full">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <label style="margin:0">Notes</label>
+        <button type="button" onclick="loadCallQuestions('f')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">📋 First-call questions</button>
+      </div>
+      <textarea id="f-notes" placeholder="Motivation level, condition, seller timeline…">${d.notes||''}</textarea>
+    </div>
   </div>
   <div class="modal-actions">
     ${editing?`<button class="btn danger" onclick="del('deals',${editIdx});closeModal()">Delete</button>`:''}
@@ -1522,6 +1617,396 @@ function editContact(type,i){
   document.getElementById('modal-title').textContent=titles[type]||'Edit contact';
   document.getElementById('modal-body').innerHTML=contactForm(type,d);
   document.getElementById('overlay').classList.add('open');
+}
+
+// ── Contact Card — read-only detail view for any contact type, with Edit/Delete ──
+function openContactCard(type,i){
+  const key=type+'s';
+  const d=(data[key]||[])[i];
+  if(!d)return;
+  const titles={buyer:'Cash buyer',realtor:'Realtor',contractor:'Contractor',manager:'Property manager',developer:'Developer',lender:'Lender',wholesaler:'Wholesaler (JV)'};
+  document.getElementById('cc-title').textContent=d.name||'Contact';
+  document.getElementById('cc-subtitle').textContent=titles[type]||'Contact';
+
+  let extra='';
+  if(type==='buyer'){
+    extra=dvRow('Strategies',buyerStrategyDisplay(d))
+      +(d.buybox?dvRow('Buy box',d.buybox):'')
+      +(d.buyBoxMinPrice||d.buyBoxMaxPrice?dvRow('Buy box range',(d.buyBoxMinPrice?fmt(d.buyBoxMinPrice):'—')+' – '+(d.buyBoxMaxPrice?fmt(d.buyBoxMaxPrice):'—')):'');
+  } else if(type==='realtor'){
+    extra=dvRow('Brokerage',d.brokerage);
+  } else if(type==='contractor'){
+    extra=dvRow('Specialty',d.specialty);
+  } else if(type==='manager'){
+    extra=dvRow('Company',d.company)+dvRow('Management fee',d.fee?d.fee+'%':'');
+  } else if(type==='developer'){
+    extra=dvRow('Company',d.company)+dvRow('Focus / project type',d.focus);
+  } else if(type==='lender'){
+    extra=dvRow('Company',d.company)+dvRow('Lending type',d.lendingtype);
+  }
+
+  const linkedReminders=d.id?remindersForContact(type,d.id):[];
+
+  document.getElementById('cc-content').innerHTML=`
+    <div class="calc-card" style="margin:0">
+      <h3>Contact details</h3>
+      <div class="mao-box">
+        ${dvRow('Phone',d.phone)}
+        ${dvRow('Email',d.email)}
+        ${extra}
+        ${dvRow('Markets',(d.markets||[]).join(', '))}
+        ${d.referredBy?dvRow('Referred by',d.referredBy):''}
+      </div>
+    </div>
+    ${d.notes?`<div class="calc-card" style="margin-top:16px"><h3>Notes</h3><div style="font-size:13px;color:var(--text);line-height:1.6">${d.notes.replace(/</g,'&lt;')}</div></div>`:''}
+    ${linkedReminders.length?`<div class="calc-card" style="margin-top:16px">
+      <h3>📅 Reminders</h3>
+      ${linkedReminders.map(r=>{
+        const timeLabel=r.time?formatTime12h(r.time):'';
+        const dateLabel=new Date(r.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        return `<div onclick="closeContactCard();openReminderModal('${r.id}')" style="cursor:pointer;padding:8px 10px;border-radius:8px;background:var(--bg3);margin-bottom:6px;font-size:13px;color:var(--text)">
+          <span style="color:var(--sub)">${dateLabel}${timeLabel?' · '+timeLabel:''}</span> — ${(r.title||'Reminder').replace(/</g,'&lt;')}
+        </div>`;
+      }).join('')}
+    </div>`:''}
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button id="cc-delete-btn" class="btn" onclick="ccDelete('${type}',${i})" style="flex:1">Delete</button>
+      <button class="btn primary" onclick="closeContactCard();editContact('${type}',${i})" style="flex:1">Edit</button>
+    </div>
+  `;
+  document.getElementById('contact-card-overlay').style.display='block';
+}
+function closeContactCard(){
+  document.getElementById('contact-card-overlay').style.display='none';
+}
+// Reuses the same two-click confirm safety as the table delete buttons —
+// first click arms it, second click (within 3s) actually deletes.
+function ccDelete(type,i){
+  const key=type+'s';
+  const pdKey=key+'-'+i;
+  del(key,i);
+  if(pendingDelete===pdKey){
+    const btn=document.getElementById('cc-delete-btn');
+    if(btn){btn.textContent='Confirm delete?';btn.style.background='#e94560';btn.style.color='#fff';btn.style.borderColor='#e94560';}
+  } else {
+    closeContactCard();
+  }
+}
+
+// ── Bruce's pinned JV contact — app-only messaging, no personal info shared ──
+function openBruceContactCard(){
+  document.getElementById('cc-title').textContent='Bruce Penance';
+  document.getElementById('cc-subtitle').textContent='Wholesaler (JV)';
+  document.getElementById('cc-content').innerHTML=`
+    <div class="calc-card" style="margin:0">
+      <h3>Contact details</h3>
+      <div class="mao-box">
+        ${dvRow('Contact method','Message through the app — no personal phone/email shared')}
+        ${dvRow('Markets','All markets')}
+      </div>
+    </div>
+    <div class="calc-card" style="margin-top:16px"><h3>Notes</h3><div style="font-size:13px;color:var(--text);line-height:1.6">Open to JV / wholesale deals — reach out anytime.</div></div>
+    <div style="margin-top:16px">
+      <button class="btn primary" onclick="closeContactCard();openMessageBruceModal()" style="width:100%">📨 Send a message</button>
+    </div>
+  `;
+  document.getElementById('contact-card-overlay').style.display='block';
+}
+// ── JV Messaging — real two-way threaded conversations. A thread_id groups
+// messages together; sender_role ('user' or 'bruce') tracks who wrote each
+// one. from_user_id always identifies whose thread it is (the customer),
+// even on rows Bruce writes as a reply — that's what lets the customer read
+// Bruce's replies in their own thread under the read policy, while Bruce can
+// read/write across every thread under his own account-specific policy.
+let jvThreadsCache=[];
+let jvCurrentThreadId=null;
+let jvCurrentRole=null; // 'bruce' when Bruce is viewing his inbox, 'user' when a customer is viewing their own conversations
+
+function jvGroupByThread(rows){
+  const map={};
+  rows.forEach(r=>{
+    if(!map[r.thread_id])map[r.thread_id]=[];
+    map[r.thread_id].push(r);
+  });
+  const threads=Object.keys(map).map(tid=>{
+    const msgs=map[tid].slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    return {threadId:tid,messages:msgs,subject:msgs[0].subject||'(no subject)',last:msgs[msgs.length-1]};
+  });
+  threads.sort((a,b)=>new Date(b.last.created_at)-new Date(a.last.created_at));
+  return threads;
+}
+
+// Entry point for a customer — their own message history with Bruce.
+async function openMessageBruceModal(){
+  jvCurrentRole='user';
+  document.getElementById('modal-title').textContent='Messages with Bruce';
+  document.getElementById('modal-body').innerHTML='<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">Loading…</div>';
+  document.getElementById('overlay').classList.add('open');
+  try{
+    if(!supabaseClient||!currentUser)throw new Error('Not signed in.');
+    const {data:rows,error}=await supabaseClient.from('jv_inquiries').select('*').eq('from_user_id',currentUser.id).order('created_at',{ascending:true});
+    if(error)throw error;
+    jvThreadsCache=rows||[];
+    renderJvThreadList('user');
+  }catch(e){
+    document.getElementById('modal-body').innerHTML=`<div style="padding:16px;color:#e94560;font-size:13px">Couldn't load messages: ${(e.message||e)}</div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div>`;
+  }
+}
+
+// Entry point for Bruce — every thread across every customer.
+async function openInbox(){
+  if(!supabaseClient||!currentUser)return;
+  jvCurrentRole='bruce';
+  document.getElementById('modal-title').textContent='📩 Inbox';
+  document.getElementById('modal-body').innerHTML='<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">Loading…</div>';
+  document.getElementById('overlay').classList.add('open');
+  try{
+    const {data:rows,error}=await supabaseClient.from('jv_inquiries').select('*').order('created_at',{ascending:true});
+    if(error)throw error;
+    jvThreadsCache=rows||[];
+    renderJvThreadList('bruce');
+  }catch(e){
+    document.getElementById('modal-body').innerHTML=`<div style="padding:16px;color:#e94560;font-size:13px">Couldn't load inbox: ${(e.message||e)}</div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div>`;
+  }
+}
+
+function renderJvThreadList(role){
+  jvCurrentRole=role;
+  const threads=jvGroupByThread(jvThreadsCache);
+  document.getElementById('modal-body').innerHTML=`
+    <div style="max-height:55vh;overflow-y:auto;margin-bottom:10px">
+      ${threads.length?threads.map(t=>{
+        const unread=role==='bruce'&&t.messages.some(m=>m.sender_role==='user'&&!m.read);
+        const other=t.messages.find(m=>m.sender_role==='user')||t.messages[0];
+        return `<div onclick="openJvThread('${t.threadId}')" style="cursor:pointer;padding:10px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--brd);margin-bottom:6px;display:flex;align-items:center;gap:10px">
+          ${other.photo_data_url?`<img src="${other.photo_data_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`:`<div style="width:32px;height:32px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>`}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;gap:6px">
+              <span style="font-size:13px;font-weight:700;color:var(--text)">${role==='bruce'?(other.name||other.from_email||'Unknown').replace(/</g,'&lt;'):'Bruce Penance'}</span>
+              <span style="font-size:11px;color:var(--sub);white-space:nowrap">${new Date(t.last.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.subject.replace(/</g,'&lt;')}</div>
+            <div style="font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(t.last.message||'').replace(/</g,'&lt;')}</div>
+          </div>
+          ${unread?`<div style="width:8px;height:8px;border-radius:50%;background:#e94560;flex-shrink:0"></div>`:''}
+        </div>`;
+      }).join(''):`<div style="text-align:center;padding:20px;color:var(--sub);font-size:13px">No conversations yet.</div>`}
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Close</button>
+      ${role==='user'?`<button class="btn primary" onclick="openJvNewThreadForm()">+ New Conversation</button>`:''}
+    </div>
+  `;
+}
+
+async function openJvThread(threadId){
+  jvCurrentThreadId=threadId;
+  renderJvThreadView();
+  if(jvCurrentRole==='bruce'){
+    const unreadIds=jvThreadsCache.filter(r=>r.thread_id===threadId&&r.sender_role==='user'&&!r.read).map(r=>r.id);
+    if(unreadIds.length&&supabaseClient){
+      try{
+        await supabaseClient.from('jv_inquiries').update({read:true}).in('id',unreadIds);
+        jvThreadsCache.forEach(r=>{if(unreadIds.includes(r.id))r.read=true;});
+        refreshInboxBadge();
+      }catch(e){}
+    }
+  }
+}
+
+function renderJvThreadView(){
+  const msgs=jvThreadsCache.filter(r=>r.thread_id===jvCurrentThreadId).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  if(!msgs.length){renderJvThreadList(jvCurrentRole);return;}
+  // Derive "am I the customer who owns this thread, or am I Bruce viewing
+  // someone else's thread?" directly from the signed-in user vs whose
+  // thread this actually is — not from a separately-tracked role flag,
+  // so this can't go stale no matter how navigation happened to get here.
+  const isThreadOwner=!!(currentUser&&msgs[0].from_user_id===currentUser.id);
+  const role=isThreadOwner?'user':'bruce';
+  jvCurrentRole=role;
+  const subject=msgs[0].subject||'(no subject)';
+  const other=msgs.find(m=>m.sender_role==='user')||msgs[0];
+  document.getElementById('modal-title').textContent=role==='bruce'?(other.name||other.from_email||'Conversation'):'Bruce Penance';
+  document.getElementById('modal-body').innerHTML=`
+    <button onclick="renderJvThreadList('${role}')" style="background:none;border:none;color:var(--acc);font-size:12px;cursor:pointer;font-family:var(--font);padding:0;margin-bottom:10px">‹ Back to all conversations</button>
+    ${role==='bruce'&&(other.phone||other.from_email)?`<div style="font-size:11px;color:var(--sub);margin-bottom:10px">${other.from_email?other.from_email.replace(/</g,'&lt;'):''}${other.phone?' · 📞 '+other.phone.replace(/</g,'&lt;'):''}</div>`:''}
+    <div id="jv-thread-scroll" style="max-height:42vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px">
+      ${msgs.map((m,idx)=>{
+        const mine=(role==='bruce'&&m.sender_role==='bruce')||(role==='user'&&m.sender_role==='user');
+        return `<div style="align-self:${mine?'flex-end':'flex-start'};max-width:80%">
+          <div style="background:${mine?'var(--acc)':'var(--bg3)'};color:${mine?'#fff':'var(--text)'};padding:10px 12px;border-radius:12px;font-size:13px">
+            ${idx===0?`<div style="font-weight:700;margin-bottom:6px">${subject.replace(/</g,'&lt;')}</div><div style="border-bottom:1px solid ${mine?'rgba(255,255,255,.3)':'var(--brd)'};margin-bottom:8px"></div>`:''}
+            <div style="white-space:pre-wrap">${(m.message||'').replace(/</g,'&lt;')}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:2px;${mine?'justify-content:flex-end':''}">
+            <div style="font-size:10px;color:var(--sub)">${new Date(m.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>
+            ${role==='bruce'?`<button onclick="deleteJvMessage('${m.id}')" style="font-size:10px;color:var(--sub);background:none;border:none;cursor:pointer;font-family:var(--font);padding:0;text-decoration:underline">${pendingDelete==='jvmsg-'+m.id?'Confirm?':'delete'}</button>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <textarea id="jv-reply-text" placeholder="Type a reply…" style="flex:1;min-height:48px;font-size:13px;margin:0"></textarea>
+      <button onclick="sendJvReply()" class="btn primary" style="align-self:flex-end">Send</button>
+    </div>
+    <div class="modal-actions" style="margin-top:10px">
+      ${role==='bruce'?`<button class="btn" onclick="addThreadSenderToContacts('${jvCurrentThreadId}')" style="margin-right:auto">+ Add to Contacts</button>
+        <button class="btn" onclick="deleteJvThread('${jvCurrentThreadId}')" style="color:#e94560;border-color:#e94560">${pendingDelete==='jvthread-'+jvCurrentThreadId?'Confirm delete thread?':'🗑 Delete thread'}</button>`:''}
+      <button class="btn" onclick="closeModal()">Close</button>
+    </div>
+  `;
+  const scrollEl=document.getElementById('jv-thread-scroll');
+  if(scrollEl)scrollEl.scrollTop=scrollEl.scrollHeight;
+}
+
+function openJvNewThreadForm(){
+  const p=data.profile||{};
+  document.getElementById('modal-title').textContent='New conversation';
+  document.getElementById('modal-body').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px;background:var(--bg3);border-radius:8px;border:1px solid var(--brd)">
+      ${p.photoDataUrl?`<img src="${p.photoDataUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">`:`<div style="width:36px;height:36px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:16px">👤</div>`}
+      <div style="font-size:12px;color:var(--sub)">Sending as<br><strong style="color:var(--text);font-size:13px">${profileDisplayName()||'(no name set — add one in Account)'}</strong></div>
+    </div>
+    <div class="form-grid">
+      <div class="fg full"><label>Subject</label><input type="text" id="jv-new-subject" placeholder="JV opportunity in Detroit"></div>
+      <div class="fg full"><label>Your phone (optional)</label><input type="text" id="jv-new-phone" placeholder="555-123-4567"></div>
+      <div class="fg full"><label>Message</label><textarea id="jv-new-text" style="min-height:120px"></textarea></div>
+    </div>
+    <div id="jv-new-status" style="font-size:12px;margin-top:8px;display:none"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="renderJvThreadList('user')">Cancel</button>
+      <button class="btn primary" id="jv-new-send-btn" onclick="sendJvNewThread()">Send</button>
+    </div>
+  `;
+}
+
+async function sendJvNewThread(){
+  const subject=(document.getElementById('jv-new-subject')||{}).value?.trim()||'(no subject)';
+  const text=(document.getElementById('jv-new-text')||{}).value?.trim()||'';
+  const phone=(document.getElementById('jv-new-phone')||{}).value?.trim()||'';
+  const statusEl=document.getElementById('jv-new-status');
+  if(!text){if(statusEl){statusEl.style.display='block';statusEl.style.color='#e94560';statusEl.textContent='Write a message first.';}return;}
+  const btn=document.getElementById('jv-new-send-btn');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  try{
+    if(!supabaseClient||!currentUser)throw new Error('Not signed in.');
+    const threadId=(crypto.randomUUID?crypto.randomUUID():'tid-'+Date.now()+'-'+Math.random().toString(36).slice(2));
+    const row={
+      from_user_id:currentUser.id,
+      from_email:currentUser.email,
+      name:profileDisplayName(),
+      phone,
+      subject,
+      message:text,
+      photo_data_url:(data.profile&&data.profile.photoDataUrl)||null,
+      thread_id:threadId,
+      sender_role:'user'
+    };
+    const {data:inserted,error}=await supabaseClient.from('jv_inquiries').insert(row).select().single();
+    if(error)throw error;
+    jvThreadsCache.push(inserted||row);
+    jvCurrentThreadId=threadId;
+    renderJvThreadView();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Send';}
+    if(statusEl){statusEl.style.display='block';statusEl.style.color='#e94560';statusEl.textContent="Couldn't send: "+(e.message||e);}
+  }
+}
+
+async function sendJvReply(){
+  const ta=document.getElementById('jv-reply-text');
+  const text=ta?ta.value.trim():'';
+  if(!text)return;
+  const role=jvCurrentRole;
+  const threadId=jvCurrentThreadId;
+  const existing=jvThreadsCache.find(r=>r.thread_id===threadId);
+  if(!existing||!supabaseClient||!currentUser)return;
+  const row={
+    from_user_id:existing.from_user_id,
+    from_email:existing.from_email,
+    name:existing.name,
+    phone:existing.phone,
+    subject:existing.subject,
+    photo_data_url:role==='user'?((data.profile&&data.profile.photoDataUrl)||null):existing.photo_data_url,
+    thread_id:threadId,
+    sender_role:role,
+    message:text
+  };
+  try{
+    const {data:inserted,error}=await supabaseClient.from('jv_inquiries').insert(row).select().single();
+    if(error)throw error;
+    jvThreadsCache.push(inserted||row);
+    if(ta)ta.value='';
+    renderJvThreadView();
+  }catch(e){
+    alert("Couldn't send reply: "+(e.message||e));
+  }
+}
+
+// Same two-click confirm pattern used everywhere else in the app.
+async function deleteJvMessage(id){
+  const pdKey='jvmsg-'+id;
+  if(pendingDelete===pdKey){
+    try{
+      await supabaseClient.from('jv_inquiries').delete().eq('id',id);
+      jvThreadsCache=jvThreadsCache.filter(r=>r.id!==id);
+      pendingDelete=null;
+      renderJvThreadView();
+    }catch(e){alert("Couldn't delete: "+(e.message||e));}
+  } else {
+    pendingDelete=pdKey;
+    renderJvThreadView();
+    setTimeout(()=>{if(pendingDelete===pdKey)pendingDelete=null;},3000);
+  }
+}
+async function deleteJvThread(threadId){
+  const pdKey='jvthread-'+threadId;
+  if(pendingDelete===pdKey){
+    try{
+      await supabaseClient.from('jv_inquiries').delete().eq('thread_id',threadId);
+      jvThreadsCache=jvThreadsCache.filter(r=>r.thread_id!==threadId);
+      pendingDelete=null;
+      renderJvThreadList('bruce');
+      refreshInboxBadge();
+    }catch(e){alert("Couldn't delete thread: "+(e.message||e));}
+  } else {
+    pendingDelete=pdKey;
+    renderJvThreadView();
+    setTimeout(()=>{if(pendingDelete===pdKey)pendingDelete=null;},3000);
+  }
+}
+
+function addThreadSenderToContacts(threadId){
+  const msgs=jvThreadsCache.filter(r=>r.thread_id===threadId);
+  const other=msgs.find(m=>m.sender_role==='user')||msgs[0];
+  if(!other)return;
+  if(!data.wholesalers)data.wholesalers=[];
+  data.wholesalers.push({
+    name:other.name||other.from_email||'Unknown',
+    phone:other.phone||'',
+    email:other.from_email||'',
+    notes:'Reached out via in-app message: "'+(other.message||'').slice(0,140)+(other.message&&other.message.length>140?'…':'')+'"'
+  });
+  save();
+  renderWholesalers();
+  alert('Added to Wholesalers (JV) contacts.');
+}
+
+async function refreshInboxBadge(){
+  if(!supabaseClient||!currentUser)return;
+  try{
+    const {data:rows,error}=await supabaseClient.from('jv_inquiries').select('thread_id').eq('sender_role','user').eq('read',false);
+    if(error)return; // not Bruce's account, or the table/policy isn't set up yet — fail silently
+    const distinctThreads=new Set((rows||[]).map(r=>r.thread_id));
+    const badge=document.getElementById('inbox-badge');
+    if(!badge)return;
+    if(distinctThreads.size>0){
+      badge.textContent=distinctThreads.size;
+      badge.style.display='flex';
+    } else {
+      badge.style.display='none';
+    }
+  }catch(e){}
 }
 
 // ── Buyer ↔ Deal matching ──────────────────────────────────
@@ -1719,12 +2204,12 @@ let propPhotos=[];
 // easily enough to blow through localStorage's ~5-10MB quota after just a
 // few uploads. Resize to a sane max dimension and re-encode as JPEG before
 // it ever gets near storage.
-function resizeImageDataUrl(blob,callback){
+function resizeImageDataUrl(blob,callback,maxDim){
+  maxDim=maxDim||1280;
   const reader=new FileReader();
   reader.onload=e=>{
     const img=new Image();
     img.onload=()=>{
-      const maxDim=1280;
       let w=img.width,h=img.height;
       if(w>maxDim||h>maxDim){
         if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}
@@ -1751,6 +2236,21 @@ function addPhotoFromBlob(blob){
   resizeImageDataUrl(blob,dataUrl=>{
     if(dataUrl){propPhotos.push(dataUrl);renderPhotos();}
   });
+}
+
+// ── Profile photo (signup + Account page) — resized much smaller than
+// property photos (just a small avatar, not something anyone zooms into),
+// which keeps it cheap to store inline and send along with every message.
+let pendingSignupPhotoDataUrl=null;
+function handleAuthPhotoUpload(event){
+  const file=event.target.files&&event.target.files[0];
+  if(!file||!file.type.startsWith('image/'))return;
+  resizeImageDataUrl(file,dataUrl=>{
+    if(!dataUrl)return;
+    pendingSignupPhotoDataUrl=dataUrl;
+    const preview=document.getElementById('auth-photo-preview');
+    if(preview){preview.src=dataUrl;preview.style.display='inline-block';}
+  },160);
 }
 function handlePhotoPaste(e){
   const items=e.clipboardData?.items;if(!items)return;
@@ -1879,6 +2379,9 @@ function gatherSharedFields(mode){
     s.hoa=v('sub-hoa');s.vacancy=v('sub-vacancy-pct');s.other=v('sub-other');
     s.comm=v('sub-listing-pct');
   } else {
+    s.rent=v('fl-mf-rent');s.tax=v('fl-mf-tax');s.ins=v('fl-mf-ins');
+    s.mgmt=v('fl-mf-mgmt');s.capex=v('fl-mf-capex');
+    s.hoa=v('fl-mf-hoa');s.vacancy=v('fl-mf-vacancy');s.other=v('fl-mf-other');
     s.comm=v('fl-commission-pct');
   }
   return s;
@@ -1898,6 +2401,9 @@ function applySharedFields(mode,s){
     setIfEmpty('sub-hoa',s.hoa);setIfEmpty('sub-vacancy-pct',s.vacancy);setIfEmpty('sub-other',s.other);
     setIfEmpty('sub-listing-pct',s.comm);
   } else {
+    setIfEmpty('fl-mf-rent',s.rent);setIfEmpty('fl-mf-tax',s.tax);setIfEmpty('fl-mf-ins',s.ins);
+    if(s.mgmt)setIfEmpty('fl-mf-mgmt',s.mgmt);if(s.capex)setIfEmpty('fl-mf-capex',s.capex);
+    setIfEmpty('fl-mf-hoa',s.hoa);setIfEmpty('fl-mf-vacancy',s.vacancy);setIfEmpty('fl-mf-other',s.other);
     setIfEmpty('fl-commission-pct',s.comm);
   }
 }
@@ -1909,26 +2415,43 @@ function openListing(){
 
 function parseZillow(raw){
   const found={};
-  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  let lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+
+  // A full-page copy almost always includes a block of OTHER nearby/similar
+  // listings (search results, "homes for you" carousels) BEFORE the actual
+  // subject property's own section. Find where the subject property's own
+  // price+address pair starts — the most reliable per-listing anchor on the
+  // page — and discard everything before it. Without this, price, days-on-
+  // market, and property type can all get silently pulled from a different
+  // listing earlier in the same paste instead of the one we actually want.
+  let anchorIdx=-1;
+  for(let i=0;i<lines.length-1;i++){
+    if(/^\$[\d,]+$/.test(lines[i])&&/^\d+.+,\s*[A-Za-z\s]+,\s*[A-Z]{2}\s+\d{5}/.test(lines[i+1])){
+      anchorIdx=i;break;
+    }
+  }
+  if(anchorIdx>=0){
+    found.price=lines[anchorIdx].replace(/[$,]/g,'');
+    found.addr=lines[anchorIdx+1];
+    lines=lines.slice(anchorIdx);
+  }
+
   const t=lines.join(' ');
 
-  // Price — Zillow shows "$124,900" as its own line near the top
-  for(let i=0;i<Math.min(lines.length,30);i++){
-    const m=lines[i].match(/^\$([\d,]+)$/);
-    if(m){found.price=m[1].replace(/,/g,'');break;}
+  // Price — fallback if the anchor above wasn't found (e.g. only the
+  // property's own section got pasted, with no leading search-results noise)
+  if(!found.price){
+    for(let i=0;i<Math.min(lines.length,150);i++){
+      const m=lines[i].match(/^\$([\d,]+)$/);
+      if(m){found.price=m[1].replace(/,/g,'');break;}
+    }
   }
   if(!found.price){
     const hits=[...t.matchAll(/\$([\d,]+)/g)].map(m=>+m[1].replace(/,/g,'')).filter(p=>p>10000&&p<5000000);
     if(hits.length)found.price=hits[0].toString();
   }
 
-  // Address — line after the price line matching "number street, city, ST zip"
-  for(let i=0;i<lines.length;i++){
-    if(lines[i].match(/^\$[\d,]+$/)&&i+1<lines.length){
-      const next=lines[i+1];
-      if(/^\d+.+,\s*[A-Za-z\s]+,\s*[A-Z]{2}\s+\d{5}/.test(next)){found.addr=next;break;}
-    }
-  }
+  // Address — fallback if the anchor above wasn't found
   if(!found.addr){
     const m=t.match(/\d{1,5}\s+\w[\w\s\.\-#]+(?:St|Ave|Rd|Dr|Blvd|Ln|Ct|Way|Pl|Cir|Ter|Hwy|Loop|Pkwy|Trail|Trl)\b[^$]*?,\s*[A-Za-z\s]+,\s*[A-Z]{2}\s+\d{5}/);
     if(m)found.addr=m[0].trim();
@@ -1943,12 +2466,14 @@ function parseZillow(raw){
     }
   }
 
-  // Baths — "Full bathrooms: 2" preferred
-  const bathFacts=t.match(/Full\s+bathrooms?:\s*(\d+)/i)||t.match(/Bathrooms?:\s*(\d+)/i);
+  // Baths — total "Bathrooms:" (e.g. 2.5) is more accurate than "Full
+  // bathrooms:" alone, which excludes half baths and would under-count
+  // (2 full + 1 half = 2.5 total, but "Full bathrooms: 2" alone misses the half).
+  const bathFacts=t.match(/Bathrooms?:\s*(\d+(?:\.\d+)?)/i)||t.match(/Full\s+bathrooms?:\s*(\d+(?:\.\d+)?)/i);
   if(bathFacts){found.baths=bathFacts[1];}
   else{
     for(let i=0;i<lines.length-1;i++){
-      if(/^\d+$/.test(lines[i])&&/^baths?$/i.test(lines[i+1])){found.baths=lines[i];break;}
+      if(/^\d+(?:\.\d+)?$/.test(lines[i])&&/^baths?$/i.test(lines[i+1])){found.baths=lines[i];break;}
     }
   }
 
@@ -1966,15 +2491,89 @@ function parseZillow(raw){
   const yearMatch=t.match(/Built\s+in\s+((?:19|20)\d{2})/i)||t.match(/Year\s+built:\s*((?:19|20)\d{2})/i);
   if(yearMatch)found.year=yearMatch[1];
 
-  // Property type + unit count
-  if(/Multi.?Family|MultiFamily/i.test(t))found.type='Multi-family';
-  if(/Duplex/i.test(t)){found.type='Multi-family';found.units='2';}
-  else if(/Triplex/i.test(t)){found.type='Multi-family';found.units='3';}
-  else if(/Quadplex|Quad.?plex|4.?plex|Fourplex/i.test(t)){found.type='Multi-family';found.units='4';}
-  else if(/Single.?Family|SFR/i.test(t))found.type='Single family';
-  else if(/Townhouse|Townhome/i.test(t))found.type='Townhouse';
-  else if(/Condo|Condominium/i.test(t))found.type='Condo';
-  else if(/Apartment/i.test(t))found.type='Apartment';
+  // Days on market — now that leading noise from other listings is gone
+  // (anchor above), the first match in this slice is reliably the subject
+  // property's own number.
+  const domMatch=t.match(/(\d+)\s*Days?\s*on\s*(?:Zillow|Redfin|the\s*market|Market)\b/i)
+    ||t.match(/Time\s*on\s*(?:Redfin|Zillow|[Mm]arket):?\s*(\d+)\s*Days?/i)
+    ||t.match(/Days?\s*on\s*(?:Zillow|Redfin|[Mm]arket):?\s*(\d+)/i);
+  if(domMatch){found.dom=domMatch[1];}
+  else{
+    for(let i=0;i<lines.length-1;i++){
+      if(/^\d+$/.test(lines[i])&&/^Days?\s*on\s*(?:Zillow|Redfin|[Mm]arket)$/i.test(lines[i+1])){found.dom=lines[i];break;}
+    }
+  }
+
+  // Property taxes & insurance — the "Payment breakdown" / "BuyAbility
+  // payment" widgets show these as a label (with or without a trailing
+  // colon, depending which widget) on one line and the dollar amount on
+  // the very next line. This is also the only place insurance appears at
+  // all, and both widgets give the MONTHLY figure directly — no conversion.
+  for(let i=0;i<lines.length-1;i++){
+    if(!found.tax&&/^Property\s+taxes:?$/i.test(lines[i])){
+      const m=lines[i+1].match(/\$?([\d,]+)/);
+      if(m)found.tax=m[1].replace(/,/g,'');
+    }
+    if(!found.ins&&/^Home\s+insurance:?$/i.test(lines[i])){
+      const m=lines[i+1].match(/\$?([\d,]+)/);
+      if(m)found.ins=m[1].replace(/,/g,'');
+    }
+  }
+  // Fallback if neither widget was part of what got copied — less reliable
+  // since this can be an annual figure depending on page section.
+  if(!found.tax){
+    const taxMatch=t.match(/(?:Annual\s+)?Property\s+tax(?:es)?:?\s*\$?([\d,]+)/i)
+      ||t.match(/Tax\s+amount\s*\(?\d{4}\)?:?\s*\$?([\d,]+)/i)
+      ||t.match(/\b20\d{2}\s+taxes?:?\s*\$?([\d,]+)/i);
+    if(taxMatch)found.tax=taxMatch[1].replace(/,/g,'');
+  }
+
+  // Property type + unit count. "Home type:" is Zillow's own structured
+  // fact (from Facts & Features) and is authoritative — checking it FIRST
+  // avoids false positives from unrelated text elsewhere on the page, like
+  // a footer link to "Duplexes & Triplexes for Sale" (a category page link
+  // with nothing to do with the subject property, but which would trip a
+  // generic "Duplex" keyword check). The anchor/truncation above already
+  // strips most of that noise, but this is a second layer of defense.
+  const homeTypeFact=t.match(/Home\s*type:\s*([A-Za-z\-]+)/i);
+  if(homeTypeFact){
+    const ht=homeTypeFact[1];
+    if(/Multi/i.test(ht))found.type='Multi-family';
+    else if(/Town/i.test(ht))found.type='Townhouse';
+    else if(/Condo/i.test(ht))found.type='Condo';
+    else if(/Apartment/i.test(ht))found.type='Apartment';
+    else if(/Single/i.test(ht))found.type='Single family';
+  }
+  // Unit count — only resolved once we already know it's multi-family, so
+  // it can't accidentally mislabel a single-family listing.
+  if(found.type==='Multi-family'){
+    if(/Duplex/i.test(t))found.units='2';
+    else if(/Triplex/i.test(t))found.units='3';
+    else if(/Quadplex|Quad.?plex|4.?plex|Fourplex/i.test(t))found.units='4';
+    else{
+      const unitsFacts=t.match(/(?:Number\s*of\s*units|Total\s*units|Units):\s*(\d+)/i);
+      if(unitsFacts)found.units=unitsFacts[1];
+      else{
+        const um=t.match(/\((\d+)[\s\-]*(?:to\s*\d+\s*)?Unit/i);
+        if(um)found.units=um[1];
+      }
+    }
+  }
+  // Fallback if "Home type:" wasn't present in what got pasted at all.
+  if(!found.type){
+    if(/Duplex/i.test(t)){found.type='Multi-family';found.units='2';}
+    else if(/Triplex/i.test(t)){found.type='Multi-family';found.units='3';}
+    else if(/Quadplex|Quad.?plex|4.?plex|Fourplex/i.test(t)){found.type='Multi-family';found.units='4';}
+    else if(/Multi.?Family|MultiFamily/i.test(t)){
+      found.type='Multi-family';
+      const um=t.match(/\((\d+)[\s\-]*(?:to\s*\d+\s*)?Unit/i);
+      if(um)found.units=um[1];
+    }
+    else if(/Townhouse|Townhome/i.test(t))found.type='Townhouse';
+    else if(/Condo|Condominium/i.test(t))found.type='Condo';
+    else if(/Apartment/i.test(t))found.type='Apartment';
+    else if(/Single.?Family|SFR/i.test(t))found.type='Single family';
+  }
 
   // Agent — "Listed by:" line followed by multiple lines of "Name phone,"
   const lbIdx=lines.findIndex(l=>/^Listed by:?$/i.test(l));
@@ -2017,6 +2616,36 @@ function importPropDetails(){
   if(found.beds){setV('prop-beds',found.beds);filled.push('beds');}
   if(found.baths){setV('prop-baths',found.baths);filled.push('baths');}
   if(found.year){setV('prop-year',found.year);filled.push('year built');}
+  if(found.dom){setV('prop-dom',found.dom);filled.push('days on market');}
+  if(found.tax||found.ins){
+    // Use the freshly-parsed property type if this import found one, since
+    // it hasn't been applied to the dropdown yet at this point — falling
+    // back to whatever's currently selected if the listing didn't mention it.
+    const importIsMulti=found.type?(found.type==='Multi-family'||found.type==='Apartment')
+      :(document.getElementById('prop-type')?.value==='Multi-family'||document.getElementById('prop-type')?.value==='Apartment');
+    // Flip's holding-cost estimate is fully automatic (no tax/insurance
+    // inputs) for single-family — only the multifamily income section uses
+    // these, so there's nowhere for a single-family flip import to land.
+    if(found.tax&&!(ovenMode==='flip'&&!importIsMulti)){
+      // Listing already shows the monthly figure directly — no conversion needed.
+      const targetId=ovenMode==='sf'?'sf-tax':ovenMode==='sub'?'sub-tax':'fl-mf-tax';
+      const el=document.getElementById(targetId);
+      if(el){
+        const taxRounded=Math.ceil(+found.tax/25)*25;
+        el.value=taxRounded;
+        filled.push('property taxes (→ '+fmt(taxRounded)+'/mo in '+(ovenMode==='sf'?'Seller Finance':ovenMode==='sub'?'Sub-To':'Flip')+')');
+      }
+    }
+    if(found.ins&&!(ovenMode==='flip'&&!importIsMulti)){
+      const targetId=ovenMode==='sf'?'sf-ins':ovenMode==='sub'?'sub-ins':'fl-mf-ins';
+      const el=document.getElementById(targetId);
+      if(el){
+        const insRounded=Math.ceil(+found.ins/25)*25;
+        el.value=insRounded;
+        filled.push('insurance (→ '+fmt(insRounded)+'/mo)');
+      }
+    }
+  }
   if(found.type){
     const s=document.getElementById('prop-type');
     if(s){s.value=found.type;propTypeChanged();}
@@ -2200,14 +2829,15 @@ function calcConv(prefix,rent,tax,ins,price){
   // → noi×12 - price×(1-downPct)×pmtFactor×12 = 0.20×(price×(downPct+closingPct) + asgnFee)
   // → noi×12 - 0.20×asgnFee = price×[0.20×(downPct+closingPct) + (1-downPct)×pmtFactor×12]
   const divisor=0.20*(downPct+closingPct)+(1-downPct)*pmtFactor*12;
-  const maxPrice=noi>0?(noi*12-0.20*asgnFee)/divisor:0;
+  const maxPriceRaw=noi>0?(noi*12-0.20*asgnFee)/divisor:0;
+  const maxPrice=roundPrice(maxPriceRaw,true); // floor — keeps the actual COC at/above the 20% target
   // PITI at maxPrice
   const convPI=maxPrice>0?maxPrice*(1-downPct)*pmtFactor:0;
   const convPITI=convPI+tax+ins;
   const convCF=maxPrice>0?noi-convPI:0;
   // Cash-in at maxPrice
-  const convCashIn=maxPrice*(downPct+closingPct)+asgnFee;
-  const convDown=maxPrice*downPct;
+  const convCashIn=roundFee(maxPrice*(downPct+closingPct)+asgnFee);
+  const convDown=roundFee(maxPrice*downPct);
 
   // COC at user's list price
   const convPIatUserPrice=price>0?price*(1-downPct)*pmtFactor:0;
@@ -2221,9 +2851,8 @@ function calcConv(prefix,rent,tax,ins,price){
   const cfEl=document.getElementById(prefix+'-conv-cf');
   const msgEl=document.getElementById(prefix+'-conv-msg');
 
-  const totalBuyerEntry=maxPrice*(downPct+closingPct)+asgnFee;
-  if(maxEl)maxEl.textContent=maxPrice?'$'+Math.round(maxPrice).toLocaleString():'—';
-  if(downEl)downEl.textContent=maxPrice?'$'+Math.round(totalBuyerEntry).toLocaleString():'—';
+  if(maxEl)maxEl.textContent=maxPrice?'$'+maxPrice.toLocaleString():'—';
+  if(downEl)downEl.textContent=maxPrice?'$'+convCashIn.toLocaleString():'—';
   if(pmtEl)pmtEl.textContent=maxPrice?'$'+Math.round(convPITI).toLocaleString()+'/mo':'—';
   if(cfEl){
     if(maxPrice){cfEl.textContent=fmtN(convCF)+'/mo';cfEl.style.color=convCF>=0?'#3ab56e':'#e94560';}
@@ -2258,6 +2887,43 @@ function entryPctEl(elId,pct){
   el.style.color=pct<0.18?'#3ab56e':pct<=0.22?'#f5a623':'#e94560';
 }
 
+// Down payment $ and % stay in sync with each other and with purchase
+// price — editing any one of the three recalculates the others, without
+// storing percent separately (it's always derived fresh from $ ÷ price).
+function syncDownFromDollar(){
+  const price=+v('sf-price')||0;
+  const down=+v('sf-down')||0;
+  const pctEl=document.getElementById('sf-down-pct');
+  if(pctEl&&price>0)pctEl.value=+(down/price*100).toFixed(1);
+  calcSF();
+}
+function syncDownFromPct(){
+  const price=+v('sf-price')||0;
+  const pct=+v('sf-down-pct')||0;
+  const downEl=document.getElementById('sf-down');
+  if(downEl&&price>0)downEl.value=Math.round(price*pct/100);
+  calcSF();
+}
+function syncDownOnPriceChange(){
+  const pctEl=document.getElementById('sf-down-pct');
+  if(pctEl&&pctEl.value!==''){
+    const price=+v('sf-price')||0;
+    const pct=+pctEl.value||0;
+    const downEl=document.getElementById('sf-down');
+    if(downEl)downEl.value=Math.round(price*pct/100);
+  }
+}
+// Pulls the suggested price/down payment shown above straight into the
+// actual Deal inputs fields, so this isn't just a reference number.
+function applySFPrelimOffer(){
+  const priceMatch=(document.getElementById('sf-prelim-price').textContent||'').match(/[\d,]+/);
+  if(!priceMatch)return;
+  const price=parseFloat(priceMatch[0].replace(/,/g,''));
+  if(!price)return;
+  setV('sf-price',price);
+  setV('sf-down-pct',10);
+  syncDownFromPct();
+}
 function calcSF(){
   const rent=+v('sf-rent')||0,tax=+v('sf-tax')||0,ins=+v('sf-ins')||0;
   const sfMgmtPre=(+v('sf-mgmt-pct')||10)/100;
@@ -2282,13 +2948,14 @@ function calcSF(){
     const downPct=0.10;
     const annualNOI=(rent-opexPre-tax-ins)*12;
     const divisor=0.20*(downPct+closingPctPre)+(1-downPct)/30;
-    const prelimPrice=annualNOI>0&&divisor>0?(annualNOI-0.20*asgnFeePre)/divisor:0;
-    const prelimDown=prelimPrice*downPct;
+    const prelimPriceRaw=annualNOI>0&&divisor>0?(annualNOI-0.20*asgnFeePre)/divisor:0;
+    const prelimPrice=roundPrice(prelimPriceRaw,true); // floor — keeps actual COC at/above the 20% target
+    const prelimDown=roundFee(prelimPrice*downPct);
     const prelimPmt=(prelimPrice*(1-downPct))/360;
     const ppEl=document.getElementById('sf-prelim-price');
-    if(ppEl)ppEl.textContent=prelimPrice>0?'$'+(Math.round(prelimPrice/100)*100).toLocaleString():'—';
+    if(ppEl)ppEl.textContent=prelimPrice>0?'$'+prelimPrice.toLocaleString():'—';
     const pdEl=document.getElementById('sf-prelim-down');
-    if(pdEl)pdEl.textContent=prelimPrice>0?'$'+(Math.round(prelimDown/100)*100).toLocaleString():'—';
+    if(pdEl)pdEl.textContent=prelimPrice>0?'$'+prelimDown.toLocaleString():'—';
     const pmEl=document.getElementById('sf-prelim-pmt');
     if(pmEl)pmEl.textContent=prelimPrice>0?'$'+Math.round(prelimPmt).toLocaleString()+'/mo':'—';
   }
@@ -2296,7 +2963,7 @@ function calcSF(){
   const price=+v('sf-price')||0;
   if(!price)return;
   const down=+v('sf-down')||0;
-  const closingPct=(+v('sf-closing-pct')||0)/100;
+  const closingPct=(+v('sf-closing-pct')||2)/100;
   const closing=price*closingPct;
   const rehab=+v('sf-rehab')||0,asgn=+v('sf-asgn')||0;
   const commPct=(+v('sf-commission-pct')||0)/100;
@@ -2446,7 +3113,7 @@ function calcSubSensitivity(){
   const loanBal=+v('sub-l1bal')||0;
   const listingPct=(+v('sub-listing-pct')||0)/100;
   const buyerAgentPct=(+v('sub-buyer-agent-pct')||0)/100;
-  const closingPct=(+v('sub-closing-pct')||0)/100;
+  const closingPct=(+v('sub-closing-pct')||2)/100;
   const sellerSplitRaw=adjustedEntry*splitPct;
   const sellerSplit=Math.round(sellerSplitRaw/500)*500;
   const yourCut=adjustedEntry-sellerSplit; // absorbs remainder
@@ -2521,7 +3188,7 @@ function calcSub(){
   const loanRate=(+v('sub-l1rate')||0)/100/12;
   const listingPct=(+v('sub-listing-pct')||0)/100;
   const buyerAgentPct=(+v('sub-buyer-agent-pct')||0)/100;
-  const closingPct=(+v('sub-closing-pct')||0)/100;
+  const closingPct=(+v('sub-closing-pct')||2)/100;
   const rent=+v('sub-rent')||0,tax=+v('sub-tax')||0,ins=+v('sub-ins')||0;
   const splitPct=(+document.getElementById('sub-split')?.value||50)/100;
   const hasBalloon=document.getElementById('sub-has-balloon')?.checked||false;
@@ -2658,10 +3325,28 @@ function calcSub(){
   calcSubSensitivity();
 }
 
+// Pulls the calculated ARV straight into the ARV override field — reads
+// from whichever section is actually showing (comps-based for single
+// family, income-based for multi-family/apartment), since only one of
+// the two is ever visible at a time.
+function applyFlipArv(){
+  const incomeSec=document.getElementById('fl-income-section');
+  const isMulti=incomeSec&&incomeSec.style.display!=='none';
+  const sourceId=isMulti?'fl-mf-arv':'fl-calc-arv';
+  const arvMatch=(document.getElementById(sourceId).textContent||'').match(/[\d,]+/);
+  if(!arvMatch)return;
+  const arv=parseFloat(arvMatch[0].replace(/,/g,''));
+  if(!arv)return;
+  setV('fl-arv',Math.round(arv));
+  calcFlip();
+}
 function calcFlip(){
   const manualArv=+v('fl-arv')||0;
-  const repair=+v('fl-repair')||0,actual=+v('fl-offer')||0;
-  const closingPct=(+v('fl-closing-pct')||0)/100;
+  const repair=+v('fl-repair')||0;
+  const assignFeeInput=roundFee(+v('fl-assign-fee')||0);
+  const rawFeeSplit=v('fl-fee-split');
+  const feeSplitPct=(rawFeeSplit===''?50:+rawFeeSplit)/100; // 0 = all cuts offer, 1 = all cuts investor profit
+  const closingPct=(+v('fl-closing-pct')||2)/100;
   const commPct=(+v('fl-commission-pct')||0)/100;
   const coverComm=document.getElementById('fl-cover-commission')?.checked||false;
   const buyerCommPct=coverComm?(+document.getElementById('fl-buyer-comm-pct')?.value||100)/100:0;
@@ -2703,18 +3388,19 @@ function calcFlip(){
     const cRate=0.07/12,cN=360,cDown=0.20,cClose=0.02,cFee=5000;
     const cPmtF=cRate/(1-Math.pow(1+cRate,-cN));
     const cDivisor=0.20*(cDown+cClose)+(1-cDown)*cPmtF*12;
-    incomeArv=mfNoi>0?(mfNoi*12-0.20*cFee)/cDivisor:0;
+    const incomeArvRaw=mfNoi>0?(mfNoi*12-0.20*cFee)/cDivisor:0;
+    incomeArv=roundPrice(incomeArvRaw,true); // floor — keeps actual COC at/above the 20% target
     setEl('fl-mf-noi',mfNoi?'$'+Math.round(mfNoi).toLocaleString()+'/mo':'—');
-    setEl('fl-mf-arv',incomeArv>0?'$'+Math.round(incomeArv).toLocaleString():'—');
+    setEl('fl-mf-arv',incomeArv>0?'$'+incomeArv.toLocaleString():'—');
   }
 
-  const calcArv=isMulti?incomeArv:compArv;
+  const calcArv=isMulti?incomeArv:roundPrice(compArv);
   const useArv=manualArv||calcArv;
 
   // Update summary bar
   setEl('fl-avg-ppsf',avgPpsf?'$'+Math.round(avgPpsf).toLocaleString()+'/sqft':'—');
   setEl('fl-subj-sqft',subjSqft?subjSqft.toLocaleString()+' sqft':'—');
-  setEl('fl-calc-arv',calcArv?'$'+Math.round(calcArv).toLocaleString():'—');
+  setEl('fl-calc-arv',calcArv?'$'+calcArv.toLocaleString():'—');
 
   // Update results
   const avgCompRow=document.getElementById('fl-avgcomp')?.closest('.mao-row');
@@ -2723,57 +3409,90 @@ function calcFlip(){
   const arvLabelEl=document.getElementById('fl-arv-calc')?.closest('.mao-row')?.querySelector('span');
   if(arvLabelEl)arvLabelEl.textContent=isMulti?'ARV (income-based, 20% COC)':'ARV (avg $/sqft × subject sqft)';
   const arvCalcEl=document.getElementById('fl-arv-calc');
-  if(arvCalcEl){arvCalcEl.textContent=calcArv?'$'+Math.round(calcArv).toLocaleString():(manualArv?'$'+manualArv.toLocaleString()+' (manual)':'—');}
+  if(arvCalcEl){arvCalcEl.textContent=calcArv?'$'+calcArv.toLocaleString():(manualArv?'$'+manualArv.toLocaleString()+' (manual)':'—');}
 
   if(!useArv)return;
 
   // MAO = ARV × 70% − repairs (no fees in this calculation)
-  const mao=useArv*0.7-repair;
-  // Purchase price = your actual offer (what you'd pay), fallback to MAO
-  const purchasePrice=actual||mao;
-  // Closing & commission based on PURCHASE PRICE, not ARV
-  const closing=sellerCoversClosing?0:purchasePrice*closingPct;
-  const commAmt=purchasePrice*commPct;
+  const maoRaw=useArv*0.7-repair;
+  const mao=roundPrice(maoRaw,true); // floor — stays within the 70% safety margin, never rounds past it
+
+  // Your assignment fee can cut into your offer to the seller, the
+  // investor's profit margin, or some split of both — the slider above
+  // decides the proportion. 0% = fee comes entirely off your offer (investor
+  // still effectively pays MAO total); 100% = your offer stays at MAO and the
+  // investor's profit absorbs the whole fee instead. Computed up front since
+  // the holding-cost estimate below is based on the actual offer, not MAO.
+  const feeFromProfit=roundFee(assignFeeInput*feeSplitPct);
+  const feeFromOffer=roundFee(assignFeeInput*(1-feeSplitPct));
+  const finalOffer=roundPrice(mao-feeFromOffer);
+
+  // Closing & commission are computed on MAO — the baseline investor cost —
+  // not on the final offer, so they stay consistent regardless of how the
+  // assignment fee gets split below.
+  const closing=sellerCoversClosing?0:mao*closingPct;
+  const commAmt=mao*commPct;
   // Commission only counts if buyer covers it
   const commForCalc=coverComm?commAmt*(1-buyerCommPct):0;
-  // Investor profit at MAO = ARV − repairs − closing − commission you cover − MAO
-  const profit=useArv-repair-closing-commForCalc-mao;
-  const assignFee=actual?mao-actual:null;
 
-  setEl('fl-70max','$'+Math.round(useArv*0.7).toLocaleString());
+  // Holding costs — a standard estimate, not a fill-in-the-blanks
+  // calculator. Property taxes/insurance/utilities are already covered
+  // elsewhere in your expense numbers, so this is just the financing side:
+  // a hard money loan covering offer + repairs, with the lender requiring
+  // 5% down (so they finance 95%), at a flat 12% annual rate for an
+  // assumed 3-month turnaround, plus 2 points (a typical mid-range
+  // figure for hard money) — all standard assumptions, not editable inputs.
+  const holdLoanAmt=(finalOffer+repair)*0.95;
+  const holdInterestEst=holdLoanAmt*0.12/12*3; // 12%/yr for 3 months = 3% of the loan
+  const holdPointsEst=holdLoanAmt*0.02; // 2 points, a typical hard-money estimate
+  const holdingCosts=roundPrice(holdInterestEst+holdPointsEst);
+
+  const profit=roundPrice(useArv-repair-closing-commForCalc-mao-holdingCosts);
+  const finalProfit=roundPrice(profit-feeFromProfit);
+
+  setEl('fl-70max','$'+roundPrice(useArv*0.7).toLocaleString());
 
   const closingRow=document.getElementById('fl-r-closing-row');
   if(closingRow)closingRow.style.display=sellerCoversClosing?'none':'flex';
-  setEl('fl-r-closing','$'+Math.round(purchasePrice*closingPct).toLocaleString()+(closingPct?` (${(closingPct*100).toFixed(1)}% of purchase price)`:''));
+  setEl('fl-r-closing','$'+Math.round(closing).toLocaleString()+(closingPct?` (${(closingPct*100).toFixed(1)}% of MAO)`:''));
   setEl('fl-r-repair','$'+repair.toLocaleString());
 
   const commRow=document.getElementById('fl-r-commission-row');
   if(commRow)commRow.style.display=coverComm&&commAmt?'flex':'none';
   setEl('fl-r-commission','$'+Math.round(commForCalc).toLocaleString());
-  setEl('fl-r-comm-amt',commForCalc?'$'+Math.round(commForCalc).toLocaleString()+` (${(commPct*100).toFixed(1)}% of purchase price)`:'—');
+  setEl('fl-r-comm-amt',commForCalc?'$'+Math.round(commForCalc).toLocaleString()+` (${(commPct*100).toFixed(1)}% of MAO)`:'—');
 
-  setEl('fl-mao','$'+Math.round(mao).toLocaleString());
-  setEl('fl-mao-big','$'+Math.round(mao).toLocaleString());
-  setEl('fl-profit','$'+Math.round(profit).toLocaleString());
-  setEl('fl-profit-big','$'+Math.round(profit).toLocaleString());
+  setEl('fl-r-holding',holdingCosts?'$'+holdingCosts.toLocaleString()+' (est.)':'$0');
+  const holdNoteEl=document.getElementById('fl-r-holding-note');
+  if(holdNoteEl)holdNoteEl.textContent=finalOffer?`Estimate: hard money loan on ${fmtN(holdLoanAmt)} (offer + repairs, 95% LTV) — 3 mo at 12%/yr (${fmtN(holdInterestEst)}) + 2 points (${fmtN(holdPointsEst)})`:'Enter an ARV and repair estimate above to see this estimate.';
+
+  setEl('fl-mao',mao?'$'+mao.toLocaleString():'$0');
+  setEl('fl-profit','$'+profit.toLocaleString());
 
   const feeEl=document.getElementById('fl-asgn-actual');
   const feeBigEl=document.getElementById('fl-fee-big');
-  if(assignFee!==null){
-    const feeStr='$'+Math.round(assignFee).toLocaleString();
-    const feeColor=assignFee>0?'#3ab56e':'#e94560';
-    if(feeEl){feeEl.textContent=feeStr;feeEl.style.color=feeColor;}
-    if(feeBigEl){feeBigEl.textContent=feeStr;feeBigEl.style.color=feeColor;}
-  } else {
-    if(feeEl)feeEl.textContent='Enter your actual offer above';
-    if(feeBigEl)feeBigEl.textContent='—';
-  }
+  const feeStr='$'+assignFeeInput.toLocaleString();
+  if(feeEl)feeEl.textContent=feeStr;
+  if(feeBigEl)feeBigEl.textContent=feeStr;
+
+  setEl('fl-offer-final','$'+finalOffer.toLocaleString());
+  setEl('fl-offer-big','$'+finalOffer.toLocaleString());
+  const profitFinalEl=document.getElementById('fl-profit-final');
+  if(profitFinalEl){profitFinalEl.textContent='$'+finalProfit.toLocaleString();profitFinalEl.style.color=finalProfit>=0?'#3ab56e':'#e94560';}
+  const profitBigEl=document.getElementById('fl-profit-big');
+  if(profitBigEl)profitBigEl.textContent='$'+finalProfit.toLocaleString();
 
   const vEl=document.getElementById('fl-verdict');
   const rEl=document.getElementById('fl-verdict-row');
-  if(mao>0&&profit>20000){vEl.textContent='Strong flip ✓';rEl.style.color='#3ab56e';}
-  else if(mao>0){vEl.textContent='Thin margins — negotiate harder';rEl.style.color='#f5a623';}
-  else{vEl.textContent='Numbers don\'t work at this price';rEl.style.color='#e94560';}
+  if(mao<=0){vEl.textContent='Numbers don\'t work at this price';rEl.style.color='#e94560';}
+  else if(finalProfit>35000){vEl.textContent='Great flip ✓';rEl.style.color='#3ab56e';}
+  else if(finalProfit>=25000){vEl.textContent='Good flip';rEl.style.color='#f5a623';}
+  else{vEl.textContent='Bad — thin margins';rEl.style.color='#e94560';}
+}
+function updateFlipFeeSplitLabel(){
+  const pct=+v('fl-fee-split')||0;
+  const labelEl=document.getElementById('fl-fee-split-label');
+  if(labelEl)labelEl.textContent=`${100-pct}% offer / ${pct}% profit`;
 }
 
 // ── Offer Oven → Deals ─────────────────────────────────────
@@ -2797,6 +3516,21 @@ function collectOvenData(){
   if(mode==='sf'){calcSF();calcConvOnly('sf');}
   else if(mode==='sub'){calcSub();calcSubSensitivity();calcConvOnly('sub');}
   else {calcFlip();}
+  const existing=currentDealIdx!==null?data.deals[currentDealIdx]:null;
+  const domInput=v('prop-dom');
+  let domAtEntry=null,domEnteredOn=null;
+  if(domInput!==''){
+    const domNum=+domInput;
+    if(existing&&existing.domAtEntry!==undefined&&existing.domAtEntry!==null&&domNum===existing.domAtEntry){
+      // Unchanged — keep the original anchor date so the live count keeps rolling forward.
+      domAtEntry=existing.domAtEntry;
+      domEnteredOn=existing.domEnteredOn;
+    } else {
+      // New value (first entry, a re-import, or a manual correction) — reset the anchor to today.
+      domAtEntry=domNum;
+      domEnteredOn=new Date().toISOString();
+    }
+  }
   const d={
     address:v('prop-addr'),
     listPrice:+v('prop-listprice')||0,
@@ -2807,6 +3541,7 @@ function collectOvenData(){
     beds:v('prop-beds'),
     baths:v('prop-baths'),
     yearBuilt:v('prop-year'),
+    domAtEntry,domEnteredOn,
     photos:[...propPhotos],
     agentName:v('prop-contact-name'),
     agentPhone:v('prop-contact-phone'),
@@ -2916,10 +3651,18 @@ function collectOvenData(){
     d.flipRepair=+v('fl-repair')||0;
     d.flipRehabState={...rehabState};
     d.flipRehabSummary=document.getElementById('fl-rehab-summary')?.innerHTML||'';
-    d.flipOffer=+v('fl-offer')||0;
+    d.flipAssignFee=+v('fl-assign-fee')||0;
+    d.flipFeeSplit=v('fl-fee-split')===''?50:+v('fl-fee-split');
+    d.flipHoldingCosts=document.getElementById('fl-r-holding')?.textContent||'';
+    d.flipOffer=parseFloat((document.getElementById('fl-offer-final')?.textContent||'').replace(/[^0-9.]/g,''))||0;
     d.flipClosingPct=+v('fl-closing-pct')||0;
     d.flipCommPct=+v('fl-commission-pct')||0;
     d.flipIsMulti=d.propType==='Multi-family'||d.propType==='Apartment';
+    d.flipComps=[];
+    for(let i=0;i<compRowCount;i++){
+      const addr=v('fc-addr-'+i);
+      if(addr)d.flipComps.push(addr);
+    }
     // Multifamily income inputs
     d.flipMfRent=+v('fl-mf-rent')||0;
     d.flipMfTax=+v('fl-mf-tax')||0;
@@ -2992,7 +3735,7 @@ function clearOven(){
   currentDealIdx=null;
   document.getElementById('oven-cancel-btn').style.display='none';
   // Property details
-  ['prop-addr','prop-listprice','prop-url','prop-units','prop-sqft','prop-beds','prop-baths','prop-year',
+  ['prop-addr','prop-listprice','prop-url','prop-units','prop-sqft','prop-beds','prop-baths','prop-year','prop-dom',
    'prop-contact-name','prop-contact-phone','prop-contact-brokerage','prop-contact-brokerage-phone',
    'prop-contact-name2','prop-contact-phone2','prop-contact-email'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const ptEl=document.getElementById('prop-type');if(ptEl){ptEl.value='Single family';propTypeChanged();}
@@ -3003,7 +3746,7 @@ function clearOven(){
   const mdEl=document.getElementById('oven-market-display');if(mdEl)mdEl.textContent='Market from address';
   const sEl=document.getElementById('oven-stage');if(sEl)sEl.value='New lead';
   // SF inputs
-  ['sf-price','sf-down','sf-rehab','sf-rate','sf-rate-io','sf-fixed-pmt','sf-rate-fixed',
+  ['sf-price','sf-down','sf-down-pct','sf-rehab','sf-rate','sf-rate-io','sf-fixed-pmt','sf-rate-fixed',
    'sf-rent','sf-tax','sf-ins','sf-hoa','sf-vacancy-pct','sf-other','sf-commission-pct','sf-balloon'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   setV('sf-closing-pct',2);setV('sf-asgn',5000);setV('sf-amort',30);
   setV('sf-mgmt-pct',10);setV('sf-capex-pct',10);
@@ -3013,6 +3756,7 @@ function clearOven(){
   // Sub inputs
   ['sub-orig-loan','sub-l1bal','sub-seller-equity','sub-l1pmt','sub-l1rate','sub-listing-pct','sub-buyer-agent-pct',
    'sub-closing-pct','sub-rent','sub-tax','sub-ins','sub-hoa','sub-vacancy-pct','sub-other','sub-balloon'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  setV('sub-closing-pct',2);
   setV('sub-mgmt-pct',10);setV('sub-capex-pct',10);
   const subSplit=document.getElementById('sub-split');if(subSplit)subSplit.value=50;
   const subKb=document.getElementById('sub-keepback');if(subKb)subKb.value=0;
@@ -3020,8 +3764,11 @@ function clearOven(){
   // Flip inputs
   rehabState={};
   const rehabSumEl2=document.getElementById('fl-rehab-summary');if(rehabSumEl2)rehabSumEl2.style.display='none';
-  ['fl-arv','fl-repair','fl-offer','fl-closing-pct','fl-commission-pct',
+  ['fl-arv','fl-repair','fl-assign-fee','fl-closing-pct','fl-commission-pct',
    'fl-mf-rent','fl-mf-tax','fl-mf-ins','fl-mf-hoa','fl-mf-vacancy','fl-mf-other'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  setV('fl-closing-pct',2);
+  setV('fl-fee-split',50);
+  updateFlipFeeSplitLabel();
   setV('fl-mf-mgmt',10);setV('fl-mf-capex',10);
   resetCompTable();
   const flCC=document.getElementById('fl-cover-commission');if(flCC){flCC.checked=false;flToggleBuyerComm();}
@@ -3105,7 +3852,10 @@ function renderDocWorkflow(d){
   if(!showDocs){
     top.style.display='none';
     top.innerHTML='';
-    if(bottomSection)bottomSection.style.display='block';
+    // The LOI generator is only relevant in New lead / Follow up — a Dead
+    // deal that never got this far has no business showing it either.
+    const showLoiBtn=d.stage==='New lead'||d.stage==='Follow up';
+    if(bottomSection)bottomSection.style.display=showLoiBtn?'block':'none';
     // Template style picker only makes sense once actually on the LOI page —
     // not yet relevant in New Lead / Follow Up.
     const styleContainer=document.getElementById('dv-loi-style-container');
@@ -3203,12 +3953,13 @@ function renderDocWorkflow(d){
         : `<div class="calc-card" style="margin-top:12px"><h3>Purchase &amp; Sale Agreement</h3>
             <div style="font-size:12px;color:var(--sub);margin-bottom:12px">No contract on file for this deal yet.</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${d.ovenMode==='sf'?`
+              ${d.stage==='LOI sent'?(d.ovenMode==='sf'?`
                 <button onclick="generateContract('cash')" id="dv-gen-contract-cash-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">📄 Generate Cash Offer Contract</button>
                 <button onclick="generateContract('sf')" id="dv-gen-contract-sf-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">📄 Generate Seller Finance Contract</button>`
-              :`<button onclick="generateContract()" id="dv-gen-contract-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">📄 Generate Purchase &amp; Sale Agreement</button>`}
+              :`<button onclick="generateContract()" id="dv-gen-contract-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">📄 Generate Purchase &amp; Sale Agreement</button>`):''}
               <button onclick="document.getElementById('dv-contract-upload').click()" style="padding:10px 18px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">⬆ Upload Signed Copy</button>
             </div>
+            ${d.stage!=='LOI sent'?`<div style="font-size:11px;color:var(--sub);margin-top:6px">The generator is only available while a deal is in LOI sent — you can still upload a signed copy directly.</div>`:''}
           </div>`);
 
   if(d.contractSigned){
@@ -3228,7 +3979,7 @@ function renderDocWorkflow(d){
     if(d.stage==='Assigned / closed'){
       const docItems=[];
       if(d.contractUploaded){
-        docItems.push({uploaded:true,label:'Purchase & Sale Agreement',file:d.contract,fileName:d.contractFileName,fileSize:d.contractFileSize});
+        docItems.push({uploaded:true,label:'Purchase & Sale Agreement',file:d.contract,fileName:d.contractFileName,fileSize:d.contractFileSize,removeFn:'removeUploadedContract()'});
       } else if(d.contract){
         docItems.push({uploaded:false,label:'Purchase & Sale Agreement',preview:'showContractPreview()'});
       }
@@ -3248,7 +3999,10 @@ function renderDocWorkflow(d){
 
       const docListHtml=docItems.length?docItems.map(item=>{
         if(item.uploaded){
-          return `<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;margin-bottom:6px;font-size:13px;color:var(--text)">📎 ${item.label}${item.fileName?': '+item.fileName:''} ${item.fileSize?'· '+item.fileSize:''}<br><a href="${item.file}" download="${item.fileName||'document'}" style="color:var(--acc);text-decoration:none;font-size:12px">Download ↓</a></div>`;
+          return `<div style="padding:10px 12px;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;margin-bottom:6px;font-size:13px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+            <div>📎 ${item.label}${item.fileName?': '+item.fileName:''} ${item.fileSize?'· '+item.fileSize:''}<br><a href="${item.file}" download="${item.fileName||'document'}" style="color:var(--acc);text-decoration:none;font-size:12px">Download ↓</a></div>
+            ${item.removeFn?`<button onclick="${item.removeFn}" style="padding:6px 14px;border-radius:8px;border:1px solid #e94560;background:transparent;color:#e94560;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">✕ Remove</button>`:''}
+          </div>`;
         }
         return `<div onclick="${item.preview}" style="cursor:pointer;padding:10px 12px;background:var(--bg3);border:1px solid var(--brd);border-radius:8px;margin-bottom:6px;font-size:13px;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px">
           <span>📄 ${item.label}</span><span style="color:var(--acc);font-size:12px;font-weight:600;white-space:nowrap">👁 View</span>
@@ -3352,9 +4106,10 @@ function renderDocWorkflow(d){
               ${assigned.length>1?`<select id="dv-assignment-buyer-select" style="font-size:12px;padding:8px 10px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-family:var(--font)">
                 ${assigned.map((b,bi)=>`<option value="${bi}">${b.name||'Unnamed'}</option>`).join('')}
               </select>`:''}
-              <button onclick="generateAssignmentAgreement()" id="dv-gen-assignment-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">📄 Generate Assignment Agreement</button>
+              ${d.stage==='Under contract'?`<button onclick="generateAssignmentAgreement()" id="dv-gen-assignment-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">📄 Generate Assignment Agreement</button>`:''}
               <button onclick="document.getElementById('dv-assignment-upload').click()" style="padding:10px 18px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">⬆ Upload Assignment Agreement</button>
-            </div>`
+            </div>
+            ${d.stage!=='Under contract'?`<div style="font-size:11px;color:var(--sub);margin-top:6px">The generator is only available while a deal is in Under Contract — you can still upload a signed copy directly.</div>`:''}`
           : `${psaUploadNote}
             <div style="font-size:11px;color:var(--sub);margin-bottom:8px">For: <strong style="color:var(--text)">${d.assignmentBuyerName||'—'}</strong></div>
             ${assignmentUnmatchedWarning}
@@ -3386,7 +4141,7 @@ function renderDocWorkflow(d){
         ${signedContractBlock}
       </div>
 
-      <div class="calc-card" style="margin-top:12px;border-left:3px solid ${inspColor}">
+      ${d.stage==='Under contract'?`<div class="calc-card" style="margin-top:12px;border-left:3px solid ${inspColor}">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Inspection period</div>
@@ -3401,9 +4156,9 @@ function renderDocWorkflow(d){
           <label style="font-size:12px;color:var(--sub)">days</label>
           <span id="dv-inspection-note" style="font-size:11px;margin-left:6px"></span>
         </div>
-      </div>
+      </div>`:''}
 
-      ${buildTimerCardHtml({
+      ${d.stage==='Under contract'?buildTimerCardHtml({
         label:'Close of Escrow',
         daysLeft:coeDaysLeft(d),
         start:d.coeStart,
@@ -3413,7 +4168,7 @@ function renderDocWorkflow(d){
         lengthValue:d.coeDays||STANDARD_CLOSING_DAYS,
         saveFn:'saveCoeDays()',
         noteId:'dv-coe-note'
-      })}
+      }):''}
 
       <div class="calc-card" style="margin-top:12px">
         <h3>Addendum to Contract</h3>
@@ -3473,12 +4228,12 @@ function renderDocWorkflow(d){
 
       <div style="margin-top:14px;margin-bottom:-2px">${templateStatusLine}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-        ${d.ovenMode==='sf'?`
+        ${d.stage==='LOI sent'?(d.ovenMode==='sf'?`
           <button onclick="generateContract('cash')" id="dv-gen-contract-cash-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">${d.contract&&!d.contractUploaded&&d.contractVariant==='cash'?'↻ Regenerate':'📄 Generate'} Cash Offer Contract</button>
           <button onclick="generateContract('sf')" id="dv-gen-contract-sf-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">${d.contract&&!d.contractUploaded&&d.contractVariant==='sf'?'↻ Regenerate':'📄 Generate'} Seller Finance Contract</button>
         `:`
           <button onclick="generateContract()" id="dv-gen-contract-btn" style="padding:10px 18px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">${d.contract&&!d.contractUploaded?'↻ Regenerate':'📄 Generate'} Purchase &amp; Sale Agreement</button>
-        `}
+        `):''}
         <button onclick="document.getElementById('dv-contract-upload').click()" style="padding:10px 18px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">⬆ ${d.contractUploaded?'Replace':'Upload'} Purchase &amp; Sale Agreement</button>
         ${d.contract&&!d.contractUploaded?`<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="contract-preview-btn" onclick="showContractPreview()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">👁 Preview as Doc</button><button class="contract-download-btn" onclick="downloadContractDoc()" style="padding:8px 16px;border-radius:8px;border:1px solid #3ab56e;background:var(--bg2);color:#3ab56e;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">⬇ Download .doc</button></div>`:''}
       </div>
@@ -4641,13 +5396,9 @@ function downloadContractDoc(){
 function removeUploadedContract(){
   if(currentDealIdx===null)return;
   const d=data.deals[currentDealIdx];
-  // Removing the uploaded file means going back to the in-app generated
-  // contract for this deal — never leave the deal with nothing on file.
-  const built=buildContract(d,d.contractVariant);
-  d.contract=built.text;
-  d.contractTemplateUnmatched=built.unmatched;
-  const slot=data.contractTemplates&&data.contractTemplates[built.kind];
-  d.contractIsCustom=!!(slot&&slot.raw);
+  d.contract=null;
+  d.contractTemplateUnmatched=[];
+  d.contractIsCustom=false;
   d.contractUploaded=false;
   d.contractFileName=null;
   d.contractFileSize=null;
@@ -4952,15 +5703,22 @@ function buildBuyerSummary(d){
     const subCocAdjusted=subEntryAdjusted>0?((subCfMonthly*12/subEntryAdjusted)*100).toFixed(1)+'%':'—';
     rows.push(['Cash-on-cash return',subCocAdjusted]);
   } else {
-    rows.push(['Deal type','Fix & Flip']);
+    // Deal type goes at the very front of the presentation for a flip,
+    // ahead of the Property/Market/Type rows already pushed above.
+    rows.unshift(['Deal type','Fix & Flip']);
     rows.push(['ARV',d.flipArvCalc||'—']);
     rows.push(['Estimated repairs',fmtC(d.flipRepair)]);
-    rows.push(['MAO',d.flipMao?fmtC(d.flipMao):'—']);
+    if(d.flipHoldingCosts)rows.push(['Holding costs (estimate)',d.flipHoldingCosts]);
     rows.push(['Purchase price',d.flipOffer?fmtC((+d.flipOffer||0)+assignmentFee):'—']);
+    rows.push(['Investor profit',d.flipProfit||'—']);
   }
 
   const tableRows=rows.map(([l,vv])=>`<div class="mao-row"><span>${l}</span><span style="font-weight:600">${vv}</span></div>`).join('');
+  const compsBlock=(!d.flipIsMulti&&d.flipComps&&d.flipComps.length)
+    ?`<div style="margin-top:10px"><div style="font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Comparable properties</div>${d.flipComps.map(a=>`<div style="font-size:13px;color:var(--text);padding:4px 0">${a.replace(/</g,'&lt;')}</div>`).join('')}</div>`
+    :'';
   return `<div class="mao-box">${tableRows}</div>
+    ${compsBlock}
     ${d.notes?`<div style="margin-top:10px;font-size:12px;color:var(--sub)"><strong style="color:var(--text)">Notes:</strong> ${d.notes.replace(/</g,'&lt;')}</div>`:''}`;
 }
 
@@ -5029,11 +5787,18 @@ function buildBuyerSummaryText(d){
     const subCocAdjusted=subEntryAdjusted>0?((subCfMonthly*12/subEntryAdjusted)*100).toFixed(1)+'%':'—';
     lines.push('Cash-on-cash return: '+subCocAdjusted);
   } else {
-    lines.push('DEAL TYPE: Fix & Flip');
+    // Deal type goes at the very front of the presentation for a flip.
+    lines.unshift('DEAL TYPE: Fix & Flip');
     lines.push('ARV: '+(d.flipArvCalc||'—'));
     lines.push('Estimated repairs: '+fmtC(d.flipRepair));
-    lines.push('MAO: '+(d.flipMao?fmtC(d.flipMao):'—'));
+    if(d.flipHoldingCosts)lines.push('Holding costs (estimate): '+d.flipHoldingCosts);
     lines.push('Purchase price: '+(d.flipOffer?fmtC((+d.flipOffer||0)+assignmentFee):'—'));
+    lines.push('Investor profit: '+(d.flipProfit||'—'));
+    if(!d.flipIsMulti&&d.flipComps&&d.flipComps.length){
+      lines.push('');
+      lines.push('COMPARABLE PROPERTIES');
+      d.flipComps.forEach(a=>lines.push(a));
+    }
   }
   if(d.notes){lines.push('');lines.push('Notes: '+d.notes);}
   return lines.join('\n');
@@ -5076,9 +5841,15 @@ let pendingMarkSignedAfterUpload=false;
 // Holds the SF deal-type choice ('sellerfinance' | 'cash') made in the first
 // sign-flow step, applied to the deal once markContractSigned() actually runs.
 let pendingFinalDealType=null;
+// Where this flow actually lands once finished — 'Under contract' normally,
+// but 'Assigned / closed' when jumping straight there from an earlier stage,
+// in which case markContractSigned() chains straight into the buyer +
+// assignment agreement flow afterward instead of stopping here.
+let pendingTransitionTarget='Under contract';
 
-function startMarkContractSigned(){
+function startMarkContractSigned(targetStage){
   if(currentDealIdx===null)return;
+  pendingTransitionTarget=targetStage||'Under contract';
   const d=data.deals[currentDealIdx];
   pendingFinalDealType=null;
   const dealtypeStep=document.getElementById('sign-dealtype-step');
@@ -5123,11 +5894,13 @@ function skipUploadThenSign(){
 function markContractSigned(){
   if(currentDealIdx===null)return;
   const idx=currentDealIdx;
+  const targetStage=pendingTransitionTarget||'Under contract';
+  pendingTransitionTarget='Under contract';
   const btn=document.getElementById('dv-signed-btn');
   if(btn){btn.disabled=true;btn.textContent='Moving...';}
   setTimeout(()=>{
     const now=new Date().toISOString();
-    data.deals[idx].stage='Under contract';
+    data.deals[idx].stage=targetStage;
     data.deals[idx].contractSigned=true;
     data.deals[idx].contractSignedDate=now;
     data.deals[idx].loi=null; // LOI no longer needed once contract is signed
@@ -5146,10 +5919,102 @@ function markContractSigned(){
     data.deals[idx].coeDays=data.deals[idx].coeDays||STANDARD_CLOSING_DAYS;
     save();
     renderPipeline();
-    openDealView(idx);
+    if(targetStage==='Assigned / closed'){
+      // Jumping straight to Assigned/Closed — continue right into the buyer +
+      // assignment agreement step instead of stopping at Under Contract.
+      startMarkAssigned();
+    } else {
+      openDealView(idx);
+    }
   },400);
 }
 
+// ── Assign buyer + Assignment Agreement — same upload-or-skip idea as the
+// contract-sign flow above, used whenever a deal moves into Assigned/Closed
+// without already having a buyer and/or a signed assignment agreement on
+// file. Only asks for whichever of the two is actually still missing.
+let pendingMarkAssignedAfterUpload=false;
+function startMarkAssigned(){
+  if(currentDealIdx===null)return;
+  const d=data.deals[currentDealIdx];
+  const needsBuyer=!(d.assignedBuyers&&d.assignedBuyers.length);
+  const pickStep=document.getElementById('assign-buyer-step-pick');
+  const uploadStep=document.getElementById('assign-buyer-step-upload');
+  const ov=document.getElementById('assign-buyer-overlay');
+  if(!ov||!pickStep||!uploadStep)return;
+  if(needsBuyer){
+    pickStep.style.display='block';
+    uploadStep.style.display='none';
+    populateStageBuyerOptions();
+  } else {
+    pickStep.style.display='none';
+    uploadStep.style.display='block';
+  }
+  ov.style.display='block';
+}
+function populateStageBuyerOptions(){
+  const buyers=data.buyers||[];
+  const sel=document.getElementById('assign-buyer-select');
+  if(sel)sel.innerHTML='<option value="">Select a buyer…</option>'+buyers.map((b,i)=>`<option value="${i}">${(b.name||'Unnamed buyer').replace(/</g,'&lt;')}</option>`).join('');
+}
+function confirmStageBuyerPick(){
+  if(currentDealIdx===null)return;
+  const sel=document.getElementById('assign-buyer-select');
+  const idx=sel?sel.value:'';
+  if(idx==='')return;
+  const buyer=(data.buyers||[])[+idx];
+  if(!buyer)return;
+  const d=data.deals[currentDealIdx];
+  if(!d.assignedBuyers)d.assignedBuyers=[];
+  d.assignedBuyers.push({name:buyer.name,phone:buyer.phone,email:buyer.email});
+  save();
+  document.getElementById('assign-buyer-step-pick').style.display='none';
+  document.getElementById('assign-buyer-step-upload').style.display='block';
+}
+function skipStageBuyerPick(){
+  document.getElementById('assign-buyer-step-pick').style.display='none';
+  document.getElementById('assign-buyer-step-upload').style.display='block';
+}
+function chooseUploadThenAssign(){
+  pendingMarkAssignedAfterUpload=true;
+  const input=document.getElementById('dv-assignment-upload-stage');
+  if(input)input.click();
+  else {pendingMarkAssignedAfterUpload=false;finishMarkAssigned();}
+}
+function skipUploadThenAssign(){
+  finishMarkAssigned();
+}
+function cancelMarkAssigned(){
+  const ov=document.getElementById('assign-buyer-overlay');
+  if(ov)ov.style.display='none';
+}
+function handleStageAssignmentUpload(event){
+  if(currentDealIdx===null)return;
+  const file=event.target.files[0];
+  if(!file){pendingMarkAssignedAfterUpload=false;return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const d=data.deals[currentDealIdx];
+    d.assignmentAgreement=e.target.result;
+    d.assignmentUploaded=true;
+    d.assignmentFileName=file.name;
+    d.assignmentFileSize=(file.size/1024).toFixed(0)+' KB';
+    save();
+    finishMarkAssigned();
+  };
+  reader.readAsDataURL(file);
+  event.target.value='';
+}
+function finishMarkAssigned(){
+  if(currentDealIdx===null)return;
+  const idx=currentDealIdx;
+  const ov=document.getElementById('assign-buyer-overlay');
+  if(ov)ov.style.display='none';
+  data.deals[idx].stage='Assigned / closed';
+  save();
+  renderPipeline();
+  openDealView(idx);
+}
 function saveInspectionDays(){
   if(currentDealIdx===null)return;
   const val=+v('dv-inspection-days')||0;
@@ -5290,6 +6155,21 @@ function daysSince(isoDate){
   const nowMidnight=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   return Math.max(0,Math.round((nowMidnight-thenMidnight)/(1000*60*60*24)));
 }
+// Days-on-market keeps counting up on its own — we don't store a frozen
+// number, we store the count *at the moment it was entered* (domAtEntry)
+// plus the date it was entered (domEnteredOn), then add elapsed days on
+// top. So if you enter "14" today and check back in a week, this reads 21
+// without you having to touch anything.
+function liveDaysOnMarket(d){
+  if(!d||d.domAtEntry===undefined||d.domAtEntry===null||!d.domEnteredOn)return null;
+  return d.domAtEntry+daysSince(d.domEnteredOn);
+}
+// Once a deal is under contract (or further along), "days on market" stops
+// being a meaningful number — the property isn't actively on the market
+// waiting for a buyer anymore, so we stop showing it from that point on.
+function domStillRelevant(stage){
+  return stage!=='Under contract'&&stage!=='Assigned / closed'&&stage!=='Dead';
+}
 
 function dvRow(label, val, opts={}){
   if(!val&&val!==0)val='—';
@@ -5336,14 +6216,15 @@ function renderDealViewSF(d,content,summary){
         ${d.beds||d.baths?dvRow('Beds / baths',(d.beds||'—')+' bd / '+(d.baths||'—')+' ba'):''}
         ${dvRow('Square footage',d.sqft?d.sqft+' sqft':'')}
         ${dvRow('Year built',d.yearBuilt)}
+        ${liveDaysOnMarket(d)!==null&&domStillRelevant(d.stage)?dvRow('Days on market',liveDaysOnMarket(d)+' days'):''}
         ${dvDivider()}
-        ${dvSection('Contact')}
-        ${dvRow('Agent',d.agentName)}
-        ${dvRow('Agent phone',d.agentPhone)}
-        ${dvRow('Brokerage',d.brokerage)}
-        ${dvRow('Brokerage phone',d.brokeragePhone)}
-        ${d.agentName2?dvRow('Co-agent',d.agentName2):''}
-        ${d.agentPhone2?dvRow('Co-agent phone',d.agentPhone2):''}
+        ${dvSection(d.contactRole==='Owner'?'Owner':'Contact')}
+        ${dvRow(d.contactRole==='Owner'?'Owner':'Agent',d.agentName)}
+        ${dvRow(d.contactRole==='Owner'?'Owner phone':'Agent phone',d.agentPhone)}
+        ${d.contactRole==='Owner'?'':dvRow('Brokerage',d.brokerage)}
+        ${d.contactRole==='Owner'?'':dvRow('Brokerage phone',d.brokeragePhone)}
+        ${d.contactRole!=='Owner'&&d.agentName2?dvRow('Co-agent',d.agentName2):''}
+        ${d.contactRole!=='Owner'&&d.agentPhone2?dvRow('Co-agent phone',d.agentPhone2):''}
         ${dvRow('Email',d.contactEmail)}
       </div>
     </div>`;
@@ -5519,10 +6400,11 @@ function renderDealViewSub(d,content,summary){
   +(d.beds||d.baths?dvRow('Beds / baths',(d.beds||'—')+' bd / '+(d.baths||'—')+' ba'):'')
   +(d.sqft?dvRow('Square footage',d.sqft+' sqft'):'')
   +(d.yearBuilt?dvRow('Year built',d.yearBuilt):'')
-  +dvDivider()+dvSection('Contact')
-  +(d.agentName?dvRow('Agent',d.agentName+(d.agentPhone?' · '+d.agentPhone:'')):'')
-  +(d.brokerage?dvRow('Brokerage',d.brokerage+(d.brokeragePhone?' · '+d.brokeragePhone:'')):'')
-  +(d.agentName2?dvRow('Co-agent',d.agentName2+(d.agentPhone2?' · '+d.agentPhone2:'')):'')
+  +(liveDaysOnMarket(d)!==null&&domStillRelevant(d.stage)?dvRow('Days on market',liveDaysOnMarket(d)+' days'):'')
+  +dvDivider()+dvSection(d.contactRole==='Owner'?'Owner':'Contact')
+  +(d.agentName?dvRow(d.contactRole==='Owner'?'Owner':'Agent',d.agentName+(d.agentPhone?' · '+d.agentPhone:'')):'')
+  +(d.contactRole==='Owner'?'':(d.brokerage?dvRow('Brokerage',d.brokerage+(d.brokeragePhone?' · '+d.brokeragePhone:'')):''))
+  +(d.contactRole!=='Owner'&&d.agentName2?dvRow('Co-agent',d.agentName2+(d.agentPhone2?' · '+d.agentPhone2:'')):'')
   +(d.contactEmail?dvRow('Email',d.contactEmail):'')
   +'</div></div>'
   +'<div class="calc-card" style="margin:0"><h3>Mortgage takeover inputs</h3><div class="mao-box">'
@@ -5626,12 +6508,13 @@ function renderDealViewFlip(d,content,summary){
         ${d.beds||d.baths?dvRow('Beds / baths',(d.beds||'—')+' bd / '+(d.baths||'—')+' ba'):''}
         ${dvRow('Square footage',d.sqft?d.sqft+' sqft':'')}
         ${dvRow('Year built',d.yearBuilt)}
+        ${liveDaysOnMarket(d)!==null&&domStillRelevant(d.stage)?dvRow('Days on market',liveDaysOnMarket(d)+' days'):''}
         ${dvDivider()}
-        ${dvSection('Contact')}
-        ${dvRow('Agent',d.agentName)}
-        ${dvRow('Agent phone',d.agentPhone)}
-        ${dvRow('Brokerage',d.brokerage)}
-        ${d.agentName2?dvRow('Co-agent',d.agentName2):''}
+        ${dvSection(d.contactRole==='Owner'?'Owner':'Contact')}
+        ${dvRow(d.contactRole==='Owner'?'Owner':'Agent',d.agentName)}
+        ${dvRow(d.contactRole==='Owner'?'Owner phone':'Agent phone',d.agentPhone)}
+        ${d.contactRole==='Owner'?'':dvRow('Brokerage',d.brokerage)}
+        ${d.contactRole!=='Owner'&&d.agentName2?dvRow('Co-agent',d.agentName2):''}
         ${dvRow('Email',d.contactEmail)}
       </div>
     </div>
@@ -5643,14 +6526,15 @@ function renderDealViewFlip(d,content,summary){
         ${d.flipIsMulti?'':dvRow('Avg $/sqft from comps',d.flipAvgPpsf||'—')}
         ${dvRow(d.flipIsMulti?'ARV (income-based, 20% COC)':'ARV (avg $/sqft × subject sqft)',d.flipArvCalc,{highlight:true})}
         ${dvRow('Repair estimate','−'+fmt(d.flipRepair))}
+        ${d.flipHoldingCosts?dvRow('Holding costs (estimate)','−'+d.flipHoldingCosts):''}
         ${d.flipRehabSummary?`<div style="font-size:11px;color:var(--sub);padding:6px 0;line-height:1.6">${d.flipRehabSummary}</div>`:''}
         ${dvRow('MAO (ARV × 70% − repairs)',d.flipMao?fmt(d.flipMao):'—',{highlight:true,color:'#3ab56e'})}
         ${d.flipClosingAmt&&d.flipClosingAmt!=='—'?dvRow('Closing costs (of purchase price)',d.flipClosingAmt):''}
         ${d.flipCommEntry&&d.flipCommEntry!=='—'&&d.flipCommPct?dvRow('Realtor commission (buyer covers)',d.flipCommEntry):''}
         ${dvDivider()}
-        ${dvRow('Your actual offer',d.flipOffer?fmt(d.flipOffer):'Not entered',{highlight:true,color:'#3ab56e'})}
+        ${dvRow('Your offer to seller',d.flipOffer?fmt(d.flipOffer):'Not entered',{highlight:true,color:'#3ab56e'})}
         ${dvRow('Your assignment fee',d.flipFee,{highlight:true,color:d.flipFee&&d.flipFee.startsWith('-')?'#e94560':'#3ab56e'})}
-        ${dvRow('Investor profit at MAO',d.flipProfit||'—')}
+        ${dvRow('Investor profit (after fee)',d.flipProfit||'—')}
         <div class="mao-total" style="display:flex;justify-content:space-between"><span>Deal verdict</span><span style="font-weight:600">${d.flipVerdict||'—'}</span></div>
       </div>
     </div>
@@ -5694,6 +6578,7 @@ function openInOven(i){
     setV('prop-beds',d.beds||'');
     setV('prop-baths',d.baths||'');
     setV('prop-year',d.yearBuilt||'');
+    setV('prop-dom',d.domAtEntry!==undefined&&d.domAtEntry!==null?d.domAtEntry:'');
     setV('prop-contact-name',d.agentName||'');
     setV('prop-contact-phone',d.agentPhone||'');
     setV('prop-contact-brokerage',d.brokerage||'');
@@ -5709,6 +6594,7 @@ function openInOven(i){
     if(d.ovenMode==='sf'){
       ovenSwitch('sf');
       setV('sf-price',d.sfPrice||'');setV('sf-down',d.sfDown||'');
+      setV('sf-down-pct',d.sfPrice?+((+d.sfDown||0)/d.sfPrice*100).toFixed(1):'');
       setV('sf-closing-pct',d.sfClosingPct||2);setV('sf-rehab',d.sfRehab||'');
       setV('sf-asgn',d.sfAsgn||5000);setV('sf-rate',d.sfRate||'');
       setV('sf-amort',d.sfAmort||30);setV('sf-rent',d.sfRent||'');
@@ -5731,6 +6617,11 @@ function openInOven(i){
     } else {
       ovenSwitch('flip');
       setV('fl-arv',d.flipArv||'');setV('fl-repair',d.flipRepair||'');
+      resetCompTable();
+      if(d.flipComps&&d.flipComps.length){
+        ensureCompRows(d.flipComps.length);
+        d.flipComps.forEach((addr,i)=>setV('fc-addr-'+i,addr));
+      }
       rehabState={...(d.flipRehabState||{})};
       const rehabSumEl=document.getElementById('fl-rehab-summary');
       if(rehabSumEl){
@@ -5741,7 +6632,9 @@ function openInOven(i){
       setV('fl-mf-ins',d.flipMfIns||'');setV('fl-mf-mgmt',d.flipMfMgmt||10);
       setV('fl-mf-capex',d.flipMfCapex||10);setV('fl-mf-hoa',d.flipMfHoa||'');
       setV('fl-mf-vacancy',d.flipMfVacancy||'');setV('fl-mf-other',d.flipMfOther||'');
-      setV('fl-offer',d.flipOffer||'');setV('fl-closing-pct',d.flipClosingPct||'');
+      setV('fl-assign-fee',d.flipAssignFee||'');setV('fl-fee-split',d.flipFeeSplit!==undefined?d.flipFeeSplit:50);
+      updateFlipFeeSplitLabel();
+      setV('fl-closing-pct',d.flipClosingPct||'');
       setV('fl-commission-pct',d.flipCommPct||'');
       calcFlip();
     }
@@ -5770,8 +6663,43 @@ function togglePaymentReceived(){
 function changeDealStage(newStage){
   if(currentDealIdx===null)return;
   const d=data.deals[currentDealIdx];
+  const fromEarlyStage=d.stage==='New lead'||d.stage==='Follow up'||d.stage==='LOI sent';
+  const alreadyAssignedClosed=d.stage==='Assigned / closed';
+
+  // Moving into Under Contract from an earlier stage with no signed PSA on
+  // file yet — ask for it (or let them skip and use whatever's generated)
+  // before completing the move. Doesn't fire again once a contract exists,
+  // so moving back and forth doesn't re-prompt for something already there.
+  if(newStage==='Under contract'&&fromEarlyStage&&!d.contract){
+    startMarkContractSigned('Under contract');
+    return;
+  }
+
+  // Moving into Assigned/Closed — what's needed depends on where it's coming
+  // from. Jumping straight there from an early stage needs the PSA prompt
+  // too; either way, it also needs a buyer and a signed assignment agreement
+  // if those aren't already on file.
+  if(newStage==='Assigned / closed'&&!alreadyAssignedClosed){
+    const needsPsa=fromEarlyStage&&!d.contract;
+    const needsBuyer=!(d.assignedBuyers&&d.assignedBuyers.length);
+    const needsAssignmentDoc=!d.assignmentAgreement;
+    if(needsPsa){
+      startMarkContractSigned('Assigned / closed'); // chains into startMarkAssigned() once done
+      return;
+    }
+    if(needsBuyer||needsAssignmentDoc){
+      startMarkAssigned();
+      return;
+    }
+  }
+
+  finishStageChangeDirect(newStage);
+}
+
+function finishStageChangeDirect(newStage){
+  if(currentDealIdx===null)return;
+  const d=data.deals[currentDealIdx];
   const wasFollowUp=d.stage==='Follow up';
-  const wasUnderContract=d.stage==='Under contract';
   d.stage=newStage;
   if(newStage==='Follow up'&&!wasFollowUp){
     d.followUpSince=new Date().toISOString();
@@ -5843,6 +6771,292 @@ function isFollowUpDue(d){
   return daysSince(d.followUpSince)>=d.followUpCheckbackDays;
 }
 
+// ── Pipeline calendar — shows follow-up/call-back due dates and manual
+// reminders. Lives under the Kanban/Table pipeline views. Month view stays
+// compact (dot + count); week view shows each item inline as a slot with
+// its time and title, since that's the level of detail worth seeing without
+// an extra click.
+let calendarViewMode='month'; // 'month' | 'week'
+let calendarMonthOffset=0;
+let calendarWeekOffset=0;
+// Contacts/deals are referenced by array position everywhere else in this
+// app, which is fine until something gets deleted and every later index
+// shifts. Reminders need to survive that, so anything actually linked to a
+// reminder gets a stable id generated the first time it's linked, rather
+// than retrofitting ids onto every record up front.
+function ensureId(obj){
+  if(!obj.id)obj.id=(crypto.randomUUID?crypto.randomUUID():'id-'+Date.now()+'-'+Math.random().toString(36).slice(2));
+  return obj.id;
+}
+const CONTACT_TYPE_LABELS={buyer:'Buyer',realtor:'Realtor',contractor:'Contractor',manager:'Property manager',developer:'Developer',lender:'Lender',wholesaler:'Wholesaler (JV)'};
+function getAllContactsFlat(){
+  const out=[];
+  Object.keys(CONTACT_TYPE_LABELS).forEach(type=>{
+    (data[type+'s']||[]).forEach((c,idx)=>{
+      out.push({type,idx,c,label:(c.name||'Unnamed')+' · '+CONTACT_TYPE_LABELS[type]});
+    });
+  });
+  return out;
+}
+function remindersForContact(type,id){
+  if(!id)return[];
+  return (data.reminders||[]).filter(r=>r.contactType===type&&r.contactId===id);
+}
+function dateKey(dt){return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');}
+function startOfWeek(dt){
+  const d=new Date(dt.getFullYear(),dt.getMonth(),dt.getDate());
+  d.setDate(d.getDate()-d.getDay());
+  return d;
+}
+function pipelineCalendarDueMap(){
+  const map={};
+  data.deals.forEach((d,i)=>{
+    if(d.stage!=='Follow up'||!d.followUpSince||!d.followUpCheckbackDays)return;
+    const due=new Date(d.followUpSince);
+    due.setDate(due.getDate()+ +d.followUpCheckbackDays);
+    const key=dateKey(due);
+    if(!map[key])map[key]=[];
+    map[key].push({kind:'deal',d,i});
+  });
+  (data.reminders||[]).forEach((r,i)=>{
+    if(!r.date)return;
+    if(!map[r.date])map[r.date]=[];
+    map[r.date].push({kind:'reminder',r,i});
+  });
+  // Within a day, show timed reminders in time order, untimed/deal items after.
+  Object.values(map).forEach(items=>items.sort((a,b)=>{
+    const ta=a.kind==='reminder'&&a.r.time?a.r.time:'99:99';
+    const tb=b.kind==='reminder'&&b.r.time?b.r.time:'99:99';
+    return ta.localeCompare(tb);
+  }));
+  return map;
+}
+function changeCalendarPeriod(delta){
+  if(calendarViewMode==='week')calendarWeekOffset+=delta;
+  else calendarMonthOffset+=delta;
+  renderPipelineCalendar();
+}
+function setCalendarView(mode,jumpToKey){
+  calendarViewMode=mode;
+  if(mode==='week'&&jumpToKey){
+    const target=new Date(jumpToKey+'T00:00:00');
+    const today=new Date();
+    const todayWeekStart=startOfWeek(today);
+    const targetWeekStart=startOfWeek(target);
+    calendarWeekOffset=Math.round((targetWeekStart-todayWeekStart)/(7*24*60*60*1000));
+  }
+  renderPipelineCalendar();
+}
+function calendarSlotHtml(item,opts={}){
+  if(item.kind==='reminder'){
+    const r=item.r;
+    const timeLabel=r.time?formatTime12h(r.time):'';
+    return `<div onclick="openReminderModal('${r.id}')" style="cursor:pointer;padding:5px 7px;border-radius:6px;background:rgba(233,69,96,.14);border-left:3px solid #e94560;margin-bottom:5px">
+      ${timeLabel?`<div style="font-size:10px;color:#e94560;font-weight:700">${timeLabel}</div>`:''}
+      <div style="font-size:11px;color:var(--text);font-weight:600;line-height:1.3">${(r.title||'Reminder').replace(/</g,'&lt;')}</div>
+    </div>`;
+  }
+  return `<div onclick="closeStageView();openDealView(${item.i})" style="cursor:pointer;padding:5px 7px;border-radius:6px;background:rgba(233,69,96,.14);border-left:3px solid #e94560;margin-bottom:5px">
+    <div style="font-size:11px;color:var(--text);font-weight:600;line-height:1.3">📞 ${(item.d.address||'Untitled property').replace(/</g,'&lt;')}</div>
+  </div>`;
+}
+function renderPipelineCalendar(){
+  const wrap=document.getElementById('pipeline-calendar');
+  if(!wrap)return;
+  const dueMap=pipelineCalendarDueMap();
+  const today=new Date();
+  const todayMidnight=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  const todayKey=dateKey(today);
+
+  // Alerts always reflect the real current date, regardless of which
+  // period is being browsed in the calendar above them.
+  let dueToday=0,overdue=0;
+  Object.keys(dueMap).forEach(key=>{
+    const keyDate=new Date(key+'T00:00:00');
+    const diffDays=Math.round((todayMidnight-keyDate)/(1000*60*60*24));
+    if(diffDays===0)dueToday+=dueMap[key].length;
+    else if(diffDays>0)overdue+=dueMap[key].length;
+  });
+
+  const toggleHtml=`<div style="display:flex;border:1px solid var(--brd);border-radius:6px;overflow:hidden">
+    <button onclick="setCalendarView('week')" style="padding:4px 10px;border:none;background:${calendarViewMode==='week'?'var(--acc)':'var(--bg2)'};color:${calendarViewMode==='week'?'#fff':'var(--text)'};font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">Week</button>
+    <button onclick="setCalendarView('month')" style="padding:4px 10px;border:none;background:${calendarViewMode==='month'?'var(--acc)':'var(--bg2)'};color:${calendarViewMode==='month'?'#fff':'var(--text)'};font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">Month</button>
+  </div>`;
+
+  let periodLabel='',bodyHtml='';
+
+  if(calendarViewMode==='week'){
+    const MONTH_ABBR=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const DAY_ABBR=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const weekStart=new Date(startOfWeek(today));
+    weekStart.setDate(weekStart.getDate()+calendarWeekOffset*7);
+    const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
+    // Built manually rather than via toLocaleDateString with a partial options
+    // object (day+year, no month) — that combination renders inconsistently
+    // depending on engine/locale data and was producing garbled output.
+    periodLabel=`${MONTH_ABBR[weekStart.getMonth()]} ${weekStart.getDate()} – ${MONTH_ABBR[weekEnd.getMonth()]} ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`;
+
+    let headers='',cells='';
+    for(let i=0;i<7;i++){
+      const d=new Date(weekStart);d.setDate(d.getDate()+i);
+      const key=dateKey(d);
+      const items=dueMap[key]||[];
+      const isToday=key===todayKey;
+      headers+=`<div style="text-align:center;padding:6px 2px;border-bottom:2px solid ${isToday?'var(--acc)':'var(--brd)'}">
+        <div style="font-size:10px;font-weight:600;color:var(--sub);text-transform:uppercase">${DAY_ABBR[d.getDay()]}</div>
+        <div style="font-size:13px;font-weight:700;color:${isToday?'var(--acc)':'var(--text)'}">${MONTH_ABBR[d.getMonth()]} ${d.getDate()}</div>
+      </div>`;
+      cells+=`<div style="padding:6px 4px;border-right:1px solid var(--brd)">
+        ${items.length?items.map(item=>calendarSlotHtml(item)).join(''):'<div style="font-size:11px;color:var(--sub);text-align:center;margin-top:6px">—</div>'}
+        <button onclick="openReminderModal(null,'${key}')" style="width:100%;padding:5px;margin-top:4px;border-radius:6px;border:1px dashed var(--brd);background:transparent;color:var(--sub);font-size:14px;cursor:pointer;font-family:var(--font);line-height:1">+</button>
+      </div>`;
+    }
+    bodyHtml=`<div style="overflow-x:auto">
+      <div style="display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));min-width:700px">${headers}</div>
+      <div style="display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));min-width:700px">${cells}</div>
+    </div>`;
+  } else {
+    const viewMonth=new Date(today.getFullYear(),today.getMonth()+calendarMonthOffset,1);
+    periodLabel=viewMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    const firstDay=new Date(viewMonth.getFullYear(),viewMonth.getMonth(),1).getDay();
+    const daysInMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,0).getDate();
+
+    let cells='';
+    for(let i=0;i<firstDay;i++)cells+='<div></div>';
+    for(let day=1;day<=daysInMonth;day++){
+      const key=dateKey(new Date(viewMonth.getFullYear(),viewMonth.getMonth(),day));
+      const items=dueMap[key]||[];
+      const isToday=key===todayKey;
+      const isPast=key<todayKey;
+      const dotColor=isPast?'#e94560':isToday?'#f5a623':'#3ab56e';
+      cells+=`<div onclick="setCalendarView('week','${key}')" style="min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;background:${isToday?'rgba(58,181,110,.12)':'transparent'};border:1px solid ${isToday?'var(--acc)':'transparent'};font-size:12px;color:var(--text);padding:4px 2px">
+        ${day}
+        ${items.length?`<div style="width:6px;height:6px;border-radius:50%;background:${dotColor};margin-top:2px"></div><div style="font-size:9px;color:var(--sub);margin-top:1px;line-height:1.1;text-align:center">${items.length} due</div>`:''}
+      </div>`;
+    }
+    bodyHtml=`
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+        ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(lbl=>`<div style="text-align:center;font-size:10px;font-weight:600;color:var(--sub);text-transform:uppercase">${lbl}</div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${cells}</div>
+    `;
+  }
+
+  wrap.innerHTML=`
+    <div class="calc-card" style="margin-top:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <h3 style="margin:0">📅 Calendar</h3>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          ${toggleHtml}
+          <button onclick="openReminderModal(null)" style="padding:4px 12px;border-radius:6px;border:none;background:var(--acc);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">+ Reminder</button>
+          <button onclick="changeCalendarPeriod(-1)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);cursor:pointer;font-family:var(--font)">‹</button>
+          <span style="font-size:13px;font-weight:600;min-width:150px;text-align:center">${periodLabel}</span>
+          <button onclick="changeCalendarPeriod(1)" style="padding:4px 10px;border-radius:6px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);cursor:pointer;font-family:var(--font)">›</button>
+        </div>
+      </div>
+      ${(dueToday>0||overdue>0)?`<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        ${dueToday>0?`<div style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;background:rgba(245,166,35,.12);color:#f5a623">🔔 ${dueToday} due today</div>`:''}
+        ${overdue>0?`<div style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;background:rgba(233,69,96,.12);color:#e94560">⚠ ${overdue} overdue</div>`:''}
+      </div>`:''}
+      ${bodyHtml}
+    </div>
+  `;
+}
+function formatTime12h(t){
+  const [h,m]=t.split(':').map(Number);
+  const period=h>=12?'PM':'AM';
+  const h12=h%12===0?12:h%12;
+  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
+}
+// Same two-click confirm pattern as every other delete button in the app.
+function findContactIndexById(type,id){
+  return (data[type+'s']||[]).findIndex(c=>c.id===id);
+}
+function openReminderModal(reminderId,prefillDate){
+  const editing=!!reminderId;
+  const r=editing?(data.reminders||[]).find(x=>x.id===reminderId):null;
+  document.getElementById('modal-title').textContent=editing?'Reminder':'Add reminder';
+  const today=dateKey(new Date());
+
+  const contactOptions=getAllContactsFlat();
+  const selectedContactKey=(editing&&r.contactType&&r.contactId)
+    ?r.contactType+'::'+findContactIndexById(r.contactType,r.contactId)
+    :'';
+  const contactSelectHtml=`<option value="">— None —</option>`+contactOptions.map(co=>
+    `<option value="${co.type}::${co.idx}" ${selectedContactKey===co.type+'::'+co.idx?'selected':''}>${co.label.replace(/</g,'&lt;')}</option>`
+  ).join('');
+
+  const selectedDealIdx=(editing&&r.dealId)?data.deals.findIndex(d=>d.id===r.dealId):-1;
+  const dealSelectHtml=`<option value="">— None —</option>`+data.deals.map((d,idx)=>
+    `<option value="${idx}" ${selectedDealIdx===idx?'selected':''}>${(d.address||'Untitled property').replace(/</g,'&lt;')} — ${d.stage||''}</option>`
+  ).join('');
+
+  document.getElementById('modal-body').innerHTML=`
+    <div class="form-grid">
+      <div class="fg full"><label>What's this reminder for?</label><input id="rem-title" type="text" placeholder="Call John about the Pembroke offer" value="${editing?(r.title||'').replace(/"/g,'&quot;'):''}"></div>
+      <div class="fg"><label>Date</label><input id="rem-date" type="date" value="${editing?r.date:(prefillDate||today)}"></div>
+      <div class="fg"><label>Time (optional)</label><input id="rem-time" type="time" value="${editing?(r.time||''):''}"></div>
+      <div class="fg full"><label>Linked contact (optional)</label><select id="rem-contact">${contactSelectHtml}</select></div>
+      <div class="fg full"><label>Linked property in pipeline (optional)</label><select id="rem-deal">${dealSelectHtml}</select></div>
+      <div class="fg full"><label>Notes</label><textarea id="rem-notes" placeholder="Notes…">${editing?(r.notes||''):''}</textarea></div>
+    </div>
+    <div class="modal-actions">
+      ${editing?`<button class="btn danger" id="rem-delete-btn" onclick="deleteReminder('${reminderId}')">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveReminder('${reminderId||''}')">Save</button>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+}
+function saveReminder(reminderId){
+  const title=document.getElementById('rem-title').value.trim();
+  const date=document.getElementById('rem-date').value;
+  const time=document.getElementById('rem-time').value;
+  const notes=document.getElementById('rem-notes').value;
+  if(!date)return;
+
+  let contactType=null,contactId=null;
+  const contactVal=document.getElementById('rem-contact').value;
+  if(contactVal){
+    const [type,idxStr]=contactVal.split('::');
+    const c=data[type+'s'][+idxStr];
+    if(c){contactType=type;contactId=ensureId(c);}
+  }
+  let dealId=null;
+  const dealVal=document.getElementById('rem-deal').value;
+  if(dealVal!==''){
+    const d=data.deals[+dealVal];
+    if(d)dealId=ensureId(d);
+  }
+
+  if(!data.reminders)data.reminders=[];
+  if(reminderId){
+    const r=data.reminders.find(x=>x.id===reminderId);
+    if(r)Object.assign(r,{title:title||'Reminder',date,time,notes,contactType,contactId,dealId});
+  } else {
+    data.reminders.push({id:ensureId({}),title:title||'Reminder',date,time,notes,contactType,contactId,dealId});
+  }
+  save();
+  closeModal();
+  renderPipelineCalendar();
+}
+// Same two-click confirm pattern as every other delete button in the app.
+function deleteReminder(reminderId){
+  const pdKey='reminder-'+reminderId;
+  if(pendingDelete===pdKey){
+    data.reminders=data.reminders.filter(r=>r.id!==reminderId);
+    pendingDelete=null;
+    save();
+    closeModal();
+    renderPipelineCalendar();
+  } else {
+    pendingDelete=pdKey;
+    const btn=document.getElementById('rem-delete-btn');
+    if(btn){btn.textContent='Confirm delete?';btn.style.background='#e94560';btn.style.color='#fff';btn.style.borderColor='#e94560';}
+    setTimeout(()=>{if(pendingDelete===pdKey)pendingDelete=null;},3000);
+  }
+}
+
 function updateFollowUpDueNote(d){
   const noteEl=document.getElementById('dv-followup-due-note');
   if(!noteEl)return;
@@ -5865,6 +7079,53 @@ function saveDealNotes(){
   if(ta){data.deals[currentDealIdx].notes=ta.value;save();}
 }
 
+// ── First-call question template ──────────────────────────────────────
+// Generates a pre-written checklist of questions to ask on the first call
+// with a seller, dropped straight into the Notes box so Bruce can type the
+// answer right after each question instead of writing them out by hand.
+function firstCallQuestions(dtype){
+  const universal=[
+    'Roof age (years)',
+    'Water heater age (years)',
+    'HVAC / furnace age (years)',
+    'Property taxes — current & verified amount',
+    'Insurance — currently insured? annual premium',
+    'What needs repair (be specific)',
+    'Any known issues — foundation, plumbing, electrical, mold',
+    'Occupancy — vacant, owner-occupied, or tenant(s) in place',
+    'Reason for selling / timeline to close'
+  ];
+  const financeOnly=[
+    'Monthly rent — whole property, or each unit if multi-family',
+    'Is the property free & clear (no mortgage)?',
+    'If financed — remaining balance / interest rate / monthly payment'
+  ];
+  const lines=['=== FIRST CALL QUESTIONS ==='];
+  universal.forEach(q=>lines.push(q+': '));
+  // Deals created via the "+ Add deal" form use 'Seller finance' / 'Sub-to / Trust
+  // acquisition'; deals saved from the Offer Oven calculator use 'Seller Finance' /
+  // 'Mortgage Takeover' instead — checking for all four so this works either way.
+  const financeTypes=['Seller finance','Seller Finance','Sub-to / Trust acquisition','Mortgage Takeover'];
+  if(financeTypes.includes(dtype)){
+    lines.push('');
+    lines.push('— Seller finance / mortgage takeover —');
+    financeOnly.forEach(q=>lines.push(q+': '));
+  }
+  return lines.join('\n');
+}
+// prefix is 'f' for the add/edit deal form, 'dv' for the deal detail view —
+// both follow the same {prefix}-notes textarea id convention.
+function loadCallQuestions(prefix){
+  const notesEl=document.getElementById(prefix+'-notes');
+  if(!notesEl)return;
+  const dtype=prefix==='f'
+    ? (document.getElementById('f-dtype')||{}).value
+    : (currentDealIdx!==null&&data.deals[currentDealIdx]?data.deals[currentDealIdx].dtype:'');
+  if(notesEl.value.trim()&&!confirm('This will replace what\'s currently in Notes with the first-call question template. Continue?'))return;
+  notesEl.value=firstCallQuestions(dtype);
+  if(prefix==='dv')saveDealNotes();
+}
+
 // ── LOI Template Library ────────────────────────────────────────────────
 const LOI_STYLES={
   sf:[
@@ -5881,7 +7142,8 @@ const LOI_STYLES={
     {id:'lowequity',label:'Low-Equity Premium'}
   ],
   flip:[
-    {id:'standard',label:'Standard Cash Offer'}
+    {id:'standard',label:'Standard Cash Offer'},
+    {id:'dscr',label:'DSCR Loan Offer'}
   ]
 };
 
@@ -6071,7 +7333,16 @@ const LOI_BUILDERS={
       s+=`Purchase price: ${c.purchasePrice?fmtC(c.purchasePrice):'—'}\n`;
       s+=`All cash, sold as-is.`;
       return s;
-    }
+    },
+    // Self-contained letter with its own greeting/signoff and embedded
+    // inspection/EMD/COE terms — does NOT use the standard LETTER OF INTENT
+    // header/footer wrapper the other templates get, since this one is
+    // already complete on its own.
+    dscr:{standalone:true,build:(d,c,addr,fmtC)=>{
+      const realtorName=d.agentName||'(Realtor Name)';
+      const price=c.purchasePrice?fmtC(c.purchasePrice):'$ XXXXX';
+      return `Good Evening ${realtorName},\n\nOffer: DSCR Loan\n\nPurchase Price: ${price}\n10 Business Day Inspection Period \nEMD: $1,500 Non-Refundable to be submitted first day post inspection\nCOE: 45 Days (DSCR Loan typically clears in 4-6 weeks)\n\nIf it doesn't fit for your client, I completely understand. We are also open to offering on creative terms if your client is open to them.\n\nThanks,\n(Your Name)`;
+    }}
   }
 };
 
@@ -6103,8 +7374,18 @@ function buildLOI(i,style,isUpdate){
     body=fn(d,c,addr,fmtC);
   } else {
     const c={purchasePrice:d.flipOffer||d.flipMao||0};
-    const fn=(LOI_BUILDERS.flip[style]||LOI_BUILDERS.flip.standard);
-    body=fn(d,c,addr,fmtC);
+    const entry=LOI_BUILDERS.flip[style]||LOI_BUILDERS.flip.standard;
+    if(entry&&typeof entry==='object'&&entry.standalone){
+      // Already a complete letter — skip the LETTER OF INTENT header and
+      // generic inspection/closing footer below, both already embedded here.
+      d.loi=entry.build(d,c,addr,fmtC);
+      d.loiGenerated=new Date().toISOString();
+      if(!isUpdate)d.stage='LOI sent';
+      save();render();
+      openDealView(i);
+      return;
+    }
+    body=entry(d,c,addr,fmtC);
   }
 
   let loi=`LETTER OF INTENT\n${today}\n\nProperty: ${d.address||'—'}\nList price: ${fmtC(d.listPrice)}\n\n`;
@@ -6145,28 +7426,29 @@ function cancelOvenEdit(){
   }
 }
 
-function switchTabOven(){switchTab('oven');currentDealIdx=null;document.getElementById('oven-save-btn').textContent='💾 Save to Deals';document.getElementById('oven-cancel-btn').style.display='none';}
+
 
 // ── Rehab checklist ──────────────────────────────────────
 const REHAB_ITEMS=[
-  {id:'windows',label:'New windows',type:'count',rate:450,unit:'$/window'},
-  {id:'kitchen',label:'New kitchen (cabinets/counters)',type:'flat',rate:12000},
-  {id:'kitchenAppliances',label:'New kitchen appliances',type:'flat',rate:4000},
-  {id:'bathroom',label:'New bathroom',type:'flat',rate:8000},
+  {id:'windows',label:'New windows',type:'count',rate:250,unit:'$/window',hint:'Old wood windows need replacement — vinyl windows stay.'},
+  {id:'kitchen',label:'New kitchen (cabinets/counters)',type:'multiplier',rate:7500},
+  {id:'kitchenAppliances',label:'New kitchen appliances',type:'multiplier',rate:4000},
+  {id:'bathroom',label:'New bathroom',type:'multiplier',rate:3750,hint:'$2,500–$5,000 depending on condition — adjust per bathroom if needed.'},
   {id:'flooring',label:'New flooring',type:'sqft',rate:6,unit:'$/sqft'},
   {id:'drywall',label:'Drywall',type:'sqft',rate:2.5,unit:'$/sqft'},
   {id:'interiorPaint',label:'Interior paint',type:'sqft',rate:2,unit:'$/sqft'},
   {id:'exteriorPaint',label:'Exterior paint',type:'sqft',rate:2.5,unit:'$/sqft'},
-  {id:'waterHeater',label:'Water heater',type:'flat',rate:1800},
-  {id:'electrical',label:'Electrical',type:'flat',rate:6000},
-  {id:'plumbing',label:'Plumbing',type:'flat',rate:6000},
-  {id:'hvac',label:'HVAC',type:'flat',rate:7000},
+  {id:'waterHeater',label:'Water heater',type:'multiplier',rate:1800,hint:'Multi-unit properties often need one per unit.'},
+  {id:'electrical',label:'Electrical',type:'flat',rate:3500},
+  {id:'plumbing',label:'Plumbing',type:'flat',rate:3750,hint:'Assuming it doesn\'t need to be replaced — $3,500–$4,000.'},
+  {id:'hvac',label:'HVAC',type:'multiplier',rate:5500,hint:'Multi-unit properties often need one system per unit.'},
   {id:'siding',label:'Exterior siding',type:'sqft',rate:8,unit:'$/sqft'},
-  {id:'roofing',label:'Roofing',type:'sqft',rate:9,unit:'$/sqft'},
-  {id:'landscaping',label:'Landscaping',type:'flat',rate:3000},
+  {id:'roofing',label:'Roofing',type:'flat',rate:10000},
+  {id:'garage',label:'Fix old garage',type:'flat',rate:9000},
+  {id:'landscaping',label:'Landscaping',type:'flat',rate:2500},
   {id:'misc',label:'Misc',type:'manual'}
 ];
-let rehabState={}; // {itemId: {checked, amount, desc}}
+let rehabState={}; // {itemId: {checked, amount, desc, qty}}
 
 function openRehabChecklist(){
   const sqft=+v('prop-sqft')||0;
@@ -6174,11 +7456,12 @@ function openRehabChecklist(){
   const container=document.getElementById('rehab-checklist-items');
   container.innerHTML=REHAB_ITEMS.map(item=>{
     const st=rehabState[item.id]||{checked:false};
-    const estCost=item.type==='sqft'?Math.round(item.rate*sqft):item.type==='flat'?item.rate:item.type==='count'?Math.round(item.rate*(st.qty||0)):0;
+    const estCost=item.type==='sqft'?Math.round(item.rate*sqft):item.type==='flat'?item.rate:item.type==='count'?Math.round(item.rate*(st.qty||0)):item.type==='multiplier'?Math.round(item.rate*(st.qty||1)):0;
     return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)">
       <input type="checkbox" id="rehab-chk-${item.id}" ${st.checked?'checked':''} onchange="updateRehabItem('${item.id}')" style="width:16px;height:16px;margin-top:2px;accent-color:var(--acc)">
       <div style="flex:1">
         <label for="rehab-chk-${item.id}" style="font-size:13px;color:var(--text);cursor:pointer;display:block">${item.label}</label>
+        ${item.hint?`<div style="font-size:10px;color:var(--sub);font-style:italic;margin-top:1px">${item.hint}</div>`:''}
         ${item.type==='manual'?`
           <div style="display:${st.checked?'flex':'none'};gap:6px;margin-top:6px" id="rehab-manual-${item.id}">
             <input type="text" id="rehab-desc-${item.id}" placeholder="Description" value="${st.desc||''}" oninput="updateRehabManual('${item.id}')" style="flex:2;font-size:12px;padding:6px 8px">
@@ -6188,6 +7471,12 @@ function openRehabChecklist(){
           <div style="display:${st.checked?'flex':'none'};gap:8px;align-items:center;margin-top:6px" id="rehab-manual-${item.id}">
             <input type="number" id="rehab-qty-${item.id}" placeholder="Qty" value="${st.qty||''}" min="0" oninput="updateRehabCount('${item.id}')" style="width:70px;font-size:12px;padding:6px 8px">
             <span style="font-size:11px;color:var(--sub)">windows × $${item.rate}/window = <span style="color:#3ab56e;font-weight:600">$${estCost.toLocaleString()}</span></span>
+          </div>
+        `:item.type==='multiplier'?`
+          <div style="display:${st.checked?'flex':'none'};gap:8px;align-items:center;margin-top:6px" id="rehab-manual-${item.id}">
+            <span style="font-size:11px;color:var(--sub)">×</span>
+            <input type="number" id="rehab-qty-${item.id}" placeholder="1" value="${st.qty||''}" min="0" oninput="updateRehabCount('${item.id}')" style="width:60px;font-size:12px;padding:6px 8px">
+            <span style="font-size:11px;color:var(--sub)">(blank = 1) · $${item.rate.toLocaleString()} each = <span style="color:#3ab56e;font-weight:600">$${estCost.toLocaleString()}</span></span>
           </div>
         `:`<div style="font-size:11px;color:var(--sub);margin-top:2px">${item.type==='sqft'?`$${item.rate}/sqft × ${sqft||'—'} sqft = `:''}<span style="color:#3ab56e;font-weight:600">$${estCost.toLocaleString()}</span></div>`}
       </div>
@@ -6202,7 +7491,8 @@ function updateRehabCount(id){
   rehabState[id].qty=+v('rehab-qty-'+id)||0;
   // Update inline cost display
   const item=REHAB_ITEMS.find(i=>i.id===id);
-  const cost=item?Math.round(item.rate*rehabState[id].qty):0;
+  const effectiveQty=item&&item.type==='multiplier'?(rehabState[id].qty||1):rehabState[id].qty;
+  const cost=item?Math.round(item.rate*effectiveQty):0;
   const manualDiv=document.getElementById('rehab-manual-'+id);
   if(manualDiv){
     const costSpan=manualDiv.querySelector('span span');
@@ -6236,10 +7526,11 @@ function updateRehabTotal(){
     if(item.type==='sqft')total+=item.rate*sqft;
     else if(item.type==='flat')total+=item.rate;
     else if(item.type==='count')total+=item.rate*(st.qty||0);
+    else if(item.type==='multiplier')total+=item.rate*(st.qty||1);
     else if(item.type==='manual')total+=st.amount||0;
   });
   const totalEl=document.getElementById('rehab-total');
-  if(totalEl)totalEl.textContent='$'+Math.round(total).toLocaleString();
+  if(totalEl)totalEl.textContent='$'+(Math.ceil(total/1000)*1000).toLocaleString();
 }
 
 function closeRehabChecklist(){
@@ -6257,11 +7548,12 @@ function applyRehabChecklist(){
     if(item.type==='sqft')cost=Math.round(item.rate*sqft);
     else if(item.type==='flat')cost=item.rate;
     else if(item.type==='count')cost=Math.round(item.rate*(st.qty||0));
+    else if(item.type==='multiplier')cost=Math.round(item.rate*(st.qty||1));
     else if(item.type==='manual')cost=st.amount||0;
     total+=cost;
-    lineItems.push({label:item.type==='manual'&&st.desc?item.label+' — '+st.desc:item.type==='count'?item.label+' ('+(st.qty||0)+')':item.label,cost});
+    lineItems.push({label:item.type==='manual'&&st.desc?item.label+' — '+st.desc:item.type==='count'?item.label+' ('+(st.qty||0)+')':item.type==='multiplier'?item.label+' (×'+(st.qty||1)+')':item.label,cost});
   });
-  setV('fl-repair',Math.round(total));
+  setV('fl-repair',Math.ceil(total/1000)*1000);
   const summaryEl=document.getElementById('fl-rehab-summary');
   if(summaryEl){
     if(lineItems.length){
@@ -6333,6 +7625,8 @@ function toggleAuthMode(){
   document.getElementById('auth-toggle-link').textContent=authMode==='signin'?'Start your free trial':'Sign in';
   document.getElementById('auth-error').style.display='none';
   document.getElementById('auth-info').style.display='none';
+  const signupFields=document.getElementById('auth-signup-fields');
+  if(signupFields)signupFields.style.display=authMode==='signup'?'block':'none';
 }
 
 async function authSubmit(){
@@ -6343,6 +7637,11 @@ async function authSubmit(){
   errEl.style.display='none';
   infoEl.style.display='none';
   if(!email||!password){errEl.textContent='Enter an email and password.';errEl.style.display='block';return;}
+  if(authMode==='signup'){
+    const firstName=(document.getElementById('auth-first-name')||{}).value?.trim()||'';
+    const lastName=(document.getElementById('auth-last-name')||{}).value?.trim()||'';
+    if(!firstName||!lastName){errEl.textContent='Enter your first and last name.';errEl.style.display='block';return;}
+  }
   if(!supabaseClient){errEl.textContent='Supabase isn\'t configured yet — see SETUP.md.';errEl.style.display='block';return;}
 
   const btn=document.getElementById('auth-submit-btn');
@@ -6350,7 +7649,17 @@ async function authSubmit(){
 
   try{
     if(authMode==='signup'){
-      const {data:res,error}=await supabaseClient.auth.signUp({email,password});
+      const firstName=(document.getElementById('auth-first-name')||{}).value?.trim()||'';
+      const lastName=(document.getElementById('auth-last-name')||{}).value?.trim()||'';
+      // Name (and photo, if small enough) ride along as auth metadata rather
+      // than the app's own data blob — that blob doesn't exist yet for a
+      // brand-new account, and won't until their first successful sign-in
+      // (which, with email confirmation on, could be a while after this
+      // moment). Metadata persists on the account immediately either way.
+      const {data:res,error}=await supabaseClient.auth.signUp({
+        email,password,
+        options:{data:{firstName,lastName,photoDataUrl:pendingSignupPhotoDataUrl||null}}
+      });
       if(error)throw error;
       if(res.user&&!res.session){
         // Email confirmation is on for this project — let them know to check inbox.
@@ -6431,7 +7740,16 @@ async function checkAuthAndProceed(){
   await loadFromCloud();
   render();
   updateTopTemplateStatus();
+  refreshTopAvatar();
+  refreshInboxBadge();
+  // Quick polling rather than a real-time subscription — good enough to
+  // notice a new message within a minute without needing a manual reload.
+  if(!inboxPollStarted){
+    inboxPollStarted=true;
+    setInterval(refreshInboxBadge,60000);
+  }
 }
+let inboxPollStarted=false;
 
 // Pulls this user's saved pipeline down from Supabase. Falls back to
 // whatever's in localStorage (e.g. pre-accounts local data, or this device's
@@ -6452,8 +7770,9 @@ async function loadFromCloud(){
       if(!data.developers)data.developers=[];
       if(!data.lenders)data.lenders=[];
       if(!data.wholesalers)data.wholesalers=[];
+      if(!data.reminders)data.reminders=[];
       if(!data.contractTemplates)data.contractTemplates={cash:{raw:'',name:''},sellerfinance:{raw:'',name:''},subjectto:{raw:'',name:''}};
-      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}
+      try{localStorage.setItem(storageKey(),JSON.stringify(data));}catch(e){}
     } else {
       // Nothing in the cloud yet for this account — use local cache (if any)
       // as the starting point and push it up.
@@ -6464,6 +7783,92 @@ async function loadFromCloud(){
     console.error('loadFromCloud failed, falling back to local cache',e);
     load();
   }
+  promoteSignupMetadataToProfile();
+}
+// The name/photo captured at signup live in Supabase Auth metadata until
+// the account's own data blob actually exists to hold them permanently —
+// copy them over exactly once, the first time this loads successfully.
+function promoteSignupMetadataToProfile(){
+  if(data.profile)return;
+  const meta=currentUser&&currentUser.user_metadata;
+  if(!meta||(!meta.firstName&&!meta.lastName))return;
+  data.profile={firstName:meta.firstName||'',lastName:meta.lastName||'',photoDataUrl:meta.photoDataUrl||null};
+  save();
+  syncToCloud();
+}
+
+// ── Account — name + small avatar shown next to the Account button, and
+// attached to outgoing JV messages instead of a raw email address.
+let pendingAccountPhotoDataUrl=null;
+function openAccountModal(){
+  const p=data.profile||{};
+  pendingAccountPhotoDataUrl=null;
+  document.getElementById('modal-title').textContent='Account';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="form-grid">
+      <div class="fg"><label>First name</label><input type="text" id="acct-first-name" value="${(p.firstName||'').replace(/"/g,'&quot;')}"></div>
+      <div class="fg"><label>Last name</label><input type="text" id="acct-last-name" value="${(p.lastName||'').replace(/"/g,'&quot;')}"></div>
+      <div class="fg full">
+        <label>Profile photo</label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+          <img id="acct-photo-preview" style="${p.photoDataUrl?'':'display:none;'}width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--brd)" src="${p.photoDataUrl||''}">
+          <button type="button" onclick="document.getElementById('acct-photo-upload').click()" style="padding:7px 12px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">Upload photo</button>
+          <button type="button" id="acct-photo-remove-btn" onclick="removeAccountPhoto()" style="display:${p.photoDataUrl?'inline-block':'none'};padding:7px 12px;border-radius:8px;border:1px solid #e94560;background:transparent;color:#e94560;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">Remove</button>
+          <input type="file" id="acct-photo-upload" accept="image/*" style="display:none" onchange="handleAccountPhotoUpload(event)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveAccountProfile()">Save</button>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+}
+function handleAccountPhotoUpload(event){
+  const file=event.target.files&&event.target.files[0];
+  if(!file||!file.type.startsWith('image/'))return;
+  resizeImageDataUrl(file,dataUrl=>{
+    if(!dataUrl)return;
+    pendingAccountPhotoDataUrl=dataUrl;
+    const preview=document.getElementById('acct-photo-preview');
+    if(preview){preview.src=dataUrl;preview.style.display='inline-block';}
+    const removeBtn=document.getElementById('acct-photo-remove-btn');
+    if(removeBtn)removeBtn.style.display='inline-block';
+  },160);
+}
+function removeAccountPhoto(){
+  pendingAccountPhotoDataUrl='__REMOVE__';
+  const preview=document.getElementById('acct-photo-preview');
+  if(preview)preview.style.display='none';
+  const removeBtn=document.getElementById('acct-photo-remove-btn');
+  if(removeBtn)removeBtn.style.display='none';
+}
+function saveAccountProfile(){
+  const firstName=document.getElementById('acct-first-name').value.trim();
+  const lastName=document.getElementById('acct-last-name').value.trim();
+  if(!data.profile)data.profile={};
+  data.profile.firstName=firstName;
+  data.profile.lastName=lastName;
+  if(pendingAccountPhotoDataUrl==='__REMOVE__')data.profile.photoDataUrl=null;
+  else if(pendingAccountPhotoDataUrl)data.profile.photoDataUrl=pendingAccountPhotoDataUrl;
+  pendingAccountPhotoDataUrl=null;
+  save();
+  refreshTopAvatar();
+  closeModal();
+}
+function refreshTopAvatar(){
+  const img=document.getElementById('top-avatar-img');
+  const fallback=document.getElementById('top-avatar-fallback');
+  if(!img||!fallback)return;
+  const photo=data.profile&&data.profile.photoDataUrl;
+  if(photo){img.src=photo;img.style.display='inline-block';fallback.style.display='none';}
+  else{img.style.display='none';fallback.style.display='inline';}
+}
+function profileDisplayName(){
+  const p=data.profile;
+  if(!p)return '';
+  return ((p.firstName||'')+' '+(p.lastName||'')).trim();
 }
 
 async function syncToCloud(){
@@ -6545,6 +7950,32 @@ try{
       <button onclick="cancelMarkContractSigned()" style="width:100%;padding:9px 16px;border-radius:8px;border:none;background:none;color:var(--sub);font-size:12px;cursor:pointer;font-family:var(--font)">Cancel</button>
     </div>
 
+  </div>
+</div>
+
+<div id="assign-buyer-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:415;overflow-y:auto;padding:2rem 1rem">
+  <div style="max-width:440px;margin:8vh auto 0;background:var(--bg);border:1px solid var(--brd);border-radius:var(--radius);padding:1.5rem;text-align:center">
+
+    <div id="assign-buyer-step-pick" style="display:none">
+      <div style="font-size:32px;margin-bottom:6px">🤝</div>
+      <h3 style="margin:0 0 6px">Assign a buyer</h3>
+      <div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:16px">Who is this deal being assigned to?</div>
+      <select id="assign-buyer-select" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-family:var(--font);font-size:13px;margin-bottom:14px"></select>
+      <button onclick="confirmStageBuyerPick()" style="width:100%;padding:12px 16px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:10px">✓ Assign Buyer</button>
+      <button onclick="skipStageBuyerPick()" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:10px">Skip for now</button>
+      <button onclick="cancelMarkAssigned()" style="width:100%;padding:9px 16px;border-radius:8px;border:none;background:none;color:var(--sub);font-size:12px;cursor:pointer;font-family:var(--font)">Cancel</button>
+    </div>
+
+    <div id="assign-buyer-step-upload" style="display:none">
+      <div style="font-size:32px;margin-bottom:6px">✓</div>
+      <h3 style="margin:0 0 6px">Signed Assignment Agreement</h3>
+      <div style="font-size:13px;color:var(--sub);line-height:1.5;margin-bottom:20px">Do you want to upload the signed copy now? This becomes the Assignment Agreement on file for this deal going forward.</div>
+      <button onclick="chooseUploadThenAssign()" style="width:100%;padding:12px 16px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:10px">📎 Upload Signed Copy</button>
+      <button onclick="skipUploadThenAssign()" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);margin-bottom:10px">Skip — Use Generated Assignment Agreement</button>
+      <button onclick="cancelMarkAssigned()" style="width:100%;padding:9px 16px;border-radius:8px;border:none;background:none;color:var(--sub);font-size:12px;cursor:pointer;font-family:var(--font)">Cancel</button>
+    </div>
+
+    <input type="file" id="dv-assignment-upload-stage" accept=".pdf,.doc,.docx,.txt,image/*" style="display:none" onchange="handleStageAssignmentUpload(event)">
   </div>
 </div>
 
@@ -6651,6 +8082,20 @@ try{
   </div>
 </div>
 
+<!-- ── CONTACT CARD OVERLAY ── -->
+<div id="contact-card-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:210;overflow-y:auto;padding:1.5rem 1rem">
+  <div style="max-width:600px;margin:0 auto">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem">
+      <button onclick="closeContactCard()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:13px;cursor:pointer;font-family:var(--font)">← Back</button>
+      <div>
+        <div id="cc-title" style="font-size:18px;font-weight:700;color:var(--text)">—</div>
+        <div id="cc-subtitle" style="font-size:12px;color:var(--sub);margin-top:2px">—</div>
+      </div>
+    </div>
+    <div id="cc-content"></div>
+  </div>
+</div>
+
 <!-- ── DEAL VIEW OVERLAY ── -->
 <div id="deal-view-overlay" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto;padding:1.5rem 1rem">
   <div style="max-width:1100px;margin:0 auto">
@@ -6718,7 +8163,10 @@ try{
 
     <!-- Notes -->
     <div class="calc-card" style="margin-top:16px" id="dv-notes-card">
-      <h3>Notes</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <h3 style="margin:0">Notes</h3>
+        <button type="button" onclick="loadCallQuestions('dv')" style="padding:5px 10px;border-radius:6px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">📋 First-call questions</button>
+      </div>
       <textarea id="dv-notes" oninput="saveDealNotes()" placeholder="Add notes about this lead…" style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px;padding:12px;resize:vertical;outline:none"></textarea>
     </div>
 
@@ -6726,6 +8174,7 @@ try{
     <div style="margin-top:16px;text-align:center" id="dv-loi-section">
       <div id="dv-loi-style-container" style="margin-bottom:10px"></div>
       <button onclick="generateLOI(currentDealIdx)" id="dv-loi-btn" style="padding:12px 28px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)">📄 Generate LOI</button>
+      <button onclick="changeDealStage('LOI sent')" style="margin-left:8px;padding:12px 20px;border-radius:8px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">→ LOI sent</button>
     </div>
     <input type="file" id="dv-contract-upload" accept=".pdf,.doc,.docx,.txt,image/*" style="display:none" onchange="handleContractUpload(event)">
   </div>
