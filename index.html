@@ -539,6 +539,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
         <div class="res-box"><div class="res-label">Monthly PITI at conventional price</div><div class="res-val" id="sf-conv-pmt">—</div></div>
         <div class="res-box"><div class="res-label">Cash flow at conventional price</div><div class="res-val" id="sf-conv-cf">—</div></div>
       </div>
+      <button onclick="applyConvOffer('sf')" style="width:100%;margin-top:10px;padding:8px;border-radius:8px;border:none;background:var(--acc);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">↓ Use this conventional offer</button>
       <div id="sf-conv-msg" style="margin-top:10px;padding:8px 12px;border-radius:6px;font-size:12px;display:none"></div>
     </div>
   </div>
@@ -1303,7 +1304,7 @@ function renderWholesalers(){
   </tr>`).join('');
 }
 
-function dtypeClass(t){return t==='Fix & Flip'||t==='Cash deal'?'cash':t==='Seller Finance'||t==='Seller finance'?'sf':'sub';}
+function dtypeClass(t){return t==='Fix & Flip'||t==='Cash deal'||t==='Conventional Cash Offer'?'cash':t==='Seller Finance'||t==='Seller finance'?'sf':'sub';}
 function dtypeBadge(t){if(!t)return'';const c=dtypeClass(t);return`<span class="dtype dtype-${c}">${t}</span>`;}
 
 function dtypeCountSummary(cards){
@@ -3043,6 +3044,32 @@ function applySFPrelimOffer(){
   setV('sf-down-pct',10);
   syncDownFromPct();
 }
+// Pulls the conventional comparison's calculated price straight into the
+// actual purchase price field, and sets the matching standard terms (20%
+// down, 7% interest, 30yr amortization) — the same combination that gets
+// this deal labeled "Conventional Cash Offer" instead of "Seller Finance"
+// once saved. Still a normal editable field afterward, not locked in.
+function applyConvOffer(prefix){
+  const priceEl=document.getElementById(prefix+'-conv-maxprice');
+  const priceMatch=(priceEl?.textContent||'').match(/[\d,]+/);
+  if(!priceMatch)return;
+  const price=parseFloat(priceMatch[0].replace(/,/g,''));
+  if(!price)return;
+  setV(prefix+'-price',price);
+  setV(prefix+'-down-pct',20);
+  setV(prefix+'-rate',7);
+  setV(prefix+'-amort',30);
+  syncDownFromPct();
+}
+// A Seller Finance deal whose actual entered terms exactly match standard
+// conventional financing (20% down, 7% interest, 30yr amortization) isn't
+// really "seller financing" anymore — at that specific combination it's
+// just a normal conventional purchase, so it gets labeled accordingly.
+function sfDealTypeLabel(){
+  const downPct=+v('sf-down-pct')||0,rate=+v('sf-rate')||0,amort=+v('sf-amort')||0;
+  const isConventional=Math.abs(downPct-20)<0.01&&Math.abs(rate-7)<0.01&&Math.abs(amort-30)<0.01;
+  return isConventional?'Conventional Cash Offer':'Seller Finance';
+}
 function calcSF(){
   const rent=+v('sf-rent')||0,tax=+v('sf-tax')||0,ins=+v('sf-ins')||0;
   const sfMgmtPre=(+v('sf-mgmt-pct')||10)/100;
@@ -3700,7 +3727,7 @@ function collectOvenData(){
     market:v('oven-market'),
     stage:v('oven-stage')||'New lead',
     created:new Date().toISOString(),
-    dtype:mode==='sf'?'Seller Finance':mode==='sub'?'Mortgage Takeover':'Fix & Flip'
+    dtype:mode==='sf'?sfDealTypeLabel():mode==='sub'?'Mortgage Takeover':'Fix & Flip'
   };
   if(mode==='sf'){
     d.sfPrice=+v('sf-price')||0;
@@ -3798,6 +3825,8 @@ function collectOvenData(){
     d.flipRehabSummary=document.getElementById('fl-rehab-summary')?.innerHTML||'';
     d.flipAssignFee=+v('fl-assign-fee')||0;
     d.flipActualOffer=+v('fl-actual-offer')||0;
+    d.flipSellerCoversClosing=document.getElementById('fl-seller-covers-closing')?.checked||false;
+    d.flipBuyerCommPct=+document.getElementById('fl-buyer-comm-pct')?.value||100;
     d.flipFeeSplit=v('fl-fee-split')===''?0:+v('fl-fee-split');
     d.flipHoldingCosts=document.getElementById('fl-r-holding')?.textContent||'';
     d.flipOffer=parseFloat((document.getElementById('fl-offer-final')?.textContent||'').replace(/[^0-9.]/g,''))||0;
@@ -3921,6 +3950,9 @@ function clearOven(){
   setV('fl-mf-mgmt',10);setV('fl-mf-capex',10);
   resetCompTable();
   const flCC=document.getElementById('fl-cover-commission');if(flCC){flCC.checked=false;flToggleBuyerComm();}
+  const flSC=document.getElementById('fl-seller-covers-closing');if(flSC)flSC.checked=false;
+  setV('fl-buyer-comm-pct',100);
+  const flCommLabel=document.getElementById('fl-buyer-comm-pct-label');if(flCommLabel)flCommLabel.textContent='100%';
   // Recalc all
   if(typeof calcSF==='function')calcSF();
   if(typeof calcSub==='function')calcSub();
@@ -6792,6 +6824,9 @@ function openInOven(i){
       setV('fl-mf-vacancy',d.flipMfVacancy||'');setV('fl-mf-other',d.flipMfOther||'');
       setV('fl-assign-fee',d.flipAssignFee||'');setV('fl-fee-split',d.flipFeeSplit!==undefined?d.flipFeeSplit:0);
       setV('fl-actual-offer',d.flipActualOffer||'');
+      const flSCRestore=document.getElementById('fl-seller-covers-closing');if(flSCRestore)flSCRestore.checked=!!d.flipSellerCoversClosing;
+      setV('fl-buyer-comm-pct',d.flipBuyerCommPct||100);
+      const flCommLabelRestore=document.getElementById('fl-buyer-comm-pct-label');if(flCommLabelRestore)flCommLabelRestore.textContent=(d.flipBuyerCommPct||100)+'%';
       updateFlipFeeSplitLabel();
       setV('fl-closing-pct',d.flipClosingPct||'');
       setV('fl-commission-pct',d.flipCommPct||'');
@@ -7365,7 +7400,8 @@ const LOI_STYLES={
   ],
   flip:[
     {id:'standard',label:'Standard Cash Offer'},
-    {id:'dscr',label:'DSCR Loan Offer'}
+    {id:'dscr',label:'DSCR Loan Offer'},
+    {id:'cash',label:'Fix & Flip Cash Offer'}
   ]
 };
 
@@ -7564,6 +7600,14 @@ const LOI_BUILDERS={
       const realtorName=d.agentName||'(Realtor Name)';
       const price=c.purchasePrice?fmtC(c.purchasePrice):'$ XXXXX';
       return `Good Evening ${realtorName},\n\nOffer: DSCR Loan\n\nPurchase Price: ${price}\n10 Business Day Inspection Period \nEMD: $1,500 Non-Refundable to be submitted first day post inspection\nCOE: 45 Days (DSCR Loan typically clears in 4-6 weeks)\n\nIf it doesn't fit for your client, I completely understand. We are also open to offering on creative terms if your client is open to them.\n\nThanks,\n(Your Name)`;
+    }},
+    // Same self-contained pattern — its own greeting/signoff, leads with the
+    // repair quote + ARV context before the actual cash offer terms.
+    cash:{standalone:true,build:(d,c,addr,fmtC)=>{
+      const repairStr=d.flipRepair?fmtC(d.flipRepair):'$_____';
+      const arvStr=d.flipArvCalc||'$_____';
+      const priceStr=c.purchasePrice?fmtC(c.purchasePrice):'$ ';
+      return `Good Afternoon,\n\nThank you for taking the time to speak to me about ${addr||'the property'}. I just heard back from my contractor who gave me a minimum quote of ${repairStr} to rehab the property. Comps in the area put the after repair value at ${arvStr} at best. With this in mind, I present my offer below.\n\nCASH OFFER\nPurchase price: ${priceStr}\nSold as-is.\nInspection Period: 10 days\nEMD: $1,500 non-refundable post-inspection\nClosing: On or before 30 days from acceptance\n\nLooking forward to hearing from you,`;
     }}
   }
 };
