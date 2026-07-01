@@ -502,7 +502,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div class="mao-row"><span>Down payment</span><span id="sf-r-down">—</span></div>
           <div class="mao-row" id="sf-r-closing-row"><span id="sf-r-closing-label">Closing costs</span><span id="sf-r-closing">—</span></div>
           <div class="mao-row"><span>Rehab / repairs</span><span id="sf-r-rehab">—</span></div>
-          <div class="mao-row"><span>Assignment fee</span><span id="sf-r-asgn">—</span></div>
+          <div class="mao-row" id="sf-r-asgn-row"><span>Assignment fee</span><span id="sf-r-asgn">—</span></div>
           <div class="mao-row" id="sf-r-commission-entry-row" style="display:none"><span id="sf-r-commission-entry-label">Realtor commission</span><span id="sf-r-commission">—</span></div>
           <div class="mao-row highlight"><span>Total cash in</span><span id="sf-r-entry">—</span></div>
           <div class="mao-row"><span>Entry cost as % of purchase price</span><span id="sf-r-entry-pct" style="font-weight:600">—</span></div>
@@ -3193,6 +3193,8 @@ function calcSF(){
   setEl('sf-r-down','$'+down.toLocaleString());
   setEl('sf-r-rehab','$'+rehab.toLocaleString());
   setEl('sf-r-asgn','$'+asgn.toLocaleString());
+  const asgnRow=document.getElementById('sf-r-asgn-row');
+  if(asgnRow)asgnRow.style.display=asgn>0?'flex':'none';
   setEl('sf-r-entry','$'+Math.round(totalEntry).toLocaleString());
   entryPctEl('sf-r-entry-pct',entryPct);
 
@@ -3734,7 +3736,7 @@ function collectOvenData(){
     d.sfDown=+v('sf-down')||0;
     d.sfClosingPct=+v('sf-closing-pct')||2;
     d.sfRehab=+v('sf-rehab')||0;
-    d.sfAsgn=+v('sf-asgn')||5000;
+    d.sfAsgn=v('sf-asgn')===''?5000:+v('sf-asgn');
     d.sfRate=v('sf-rate');
     d.sfRateIO=v('sf-rate-io');
     d.sfRateFixed=v('sf-rate-fixed');
@@ -6445,7 +6447,7 @@ function renderDealViewSF(d,content,summary){
         ${dvRow('Down payment',fmt(d.sfDown))}
         ${dvRow('Closing costs',d.sfClosingPct?'$'+Math.round((d.sfPrice||0)*d.sfClosingPct/100).toLocaleString()+' ('+d.sfClosingPct+'%)':'')}
         ${dvRow('Rehab / repairs',fmt(d.sfRehab))}
-        ${dvRow('Assignment fee',fmt(d.sfAsgn))}
+        ${d.sfAsgn?dvRow('Assignment fee',fmt(d.sfAsgn)):''}
         ${dvRow('Total cash in',d.sfResultEntry,{highlight:true})}
         ${dvRow('Entry as % of price',d.sfResultEntryPct)}
         ${dvDivider()}
