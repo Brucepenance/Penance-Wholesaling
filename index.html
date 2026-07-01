@@ -3759,6 +3759,8 @@ function collectOvenData(){
     d.sfResultCommAmt=document.getElementById('sf-r-comm-amt')?.textContent||'';
     d.sfResultCommSeller=document.getElementById('sf-r-comm-seller')?.textContent||'';
     d.sfVerdictText=document.getElementById('sf-verdict-box')?.textContent||'';
+    d.sfVerdictBg=document.getElementById('sf-verdict-box')?.style.background||'';
+    d.sfVerdictColor=document.getElementById('sf-verdict-box')?.style.color||'';
     d.sfPrelimPrice=document.getElementById('sf-prelim-price')?.textContent||'';
     d.sfPrelimDown=document.getElementById('sf-prelim-down')?.textContent||'';
     d.sfPrelimPmt=document.getElementById('sf-prelim-pmt')?.textContent||'';
@@ -3812,6 +3814,8 @@ function collectOvenData(){
     d.subCOC=document.getElementById('sub-r-coc')?.textContent||'';
     d.subBalloonBal=document.getElementById('sub-r-balloon-bal')?.textContent||'';
     d.subVerdictText=document.getElementById('sub-verdict-box')?.textContent||'';
+    d.subVerdictBg=document.getElementById('sub-verdict-box')?.style.background||'';
+    d.subVerdictColor=document.getElementById('sub-verdict-box')?.style.color||'';
     d.subMgmt=+v('sub-mgmt-pct')||10;
     d.subCapex=+v('sub-capex-pct')||10;
     d.subConvMax=document.getElementById('sub-conv-maxprice')?.textContent||'';
@@ -3863,6 +3867,7 @@ function collectOvenData(){
     d.flipFee=document.getElementById('fl-fee-big')?.textContent||'';
     d.flipProfit=document.getElementById('fl-profit-big')?.textContent||'';
     d.flipVerdict=document.getElementById('fl-verdict')?.textContent||'';
+    d.flipVerdictColor=document.getElementById('fl-verdict-row')?.style.color||'';
   }
   return d;
 }
@@ -6454,7 +6459,7 @@ function renderDealViewSF(d,content,summary){
         ${dvRow('Annual cash flow',d.sfResultCFA,{highlight:true,color:d.sfResultCFA&&d.sfResultCFA.startsWith('-')?red:green})}
         <div class="mao-total" style="display:flex;justify-content:space-between"><span>COC return</span><span style="color:${green};font-weight:600">${d.sfResultCOC||'—'}</span></div>
       </div>
-      ${d.sfVerdictText?`<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#052e16;color:#4ade80;margin-bottom:12px">${d.sfVerdictText}</div>`:''}
+      ${d.sfVerdictText?`<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:${d.sfVerdictBg||'#052e16'};color:${d.sfVerdictColor||'#4ade80'};margin-bottom:12px">${d.sfVerdictText}</div>`:''}
       <div class="mao-box">
         ${dvSection('Selling party breakdown')}
         ${dvRow('Realtor commission'+(d.sfCommPct?' ('+d.sfCommPct+'%)':''),d.sfResultCommAmt)}
@@ -6521,7 +6526,7 @@ function renderDealViewSF(d,content,summary){
       Offer <strong style="color:#3ab56e">${fmt(d.sfPrice)}</strong> · ${rate} interest · ${d.sfAmort||30}yr amort${d.sfBalloon?' · '+d.sfBalloon+'yr balloon':''}<br>
       Monthly payment <strong>${sfCleanMoney(d.sfResultPmt)||'—'}</strong> · CF <strong>${d.sfResultCF||'—'}</strong> · COC <strong style="color:#3ab56e">${d.sfResultCOC||'—'}</strong><br>
       Conventional ceiling <strong>${d.sfConvMax||'—'}</strong>${d.sfConvMsg?' · '+d.sfConvMsg:''}<br>
-      ${d.sfVerdictText?`<span style="color:#4ade80">${d.sfVerdictText}</span>`:''}
+      ${d.sfVerdictText?`<span style="color:${d.sfVerdictColor||'#4ade80'}">${d.sfVerdictText}</span>`:''}
     </div>`;
 }
 
@@ -6717,7 +6722,7 @@ function renderDealViewFlip(d,content,summary){
         ${dvRow('Your offer to seller',d.flipOffer?fmt(d.flipOffer):'Not entered',{highlight:true,color:'#3ab56e'})}
         ${dvRow('Your assignment fee',d.flipFee,{highlight:true,color:d.flipFee&&d.flipFee.startsWith('-')?'#e94560':'#3ab56e'})}
         ${dvRow('Investor profit (after fee)',d.flipProfit||'—')}
-        <div class="mao-total" style="display:flex;justify-content:space-between"><span>Deal verdict</span><span style="font-weight:600">${d.flipVerdict||'—'}</span></div>
+        <div class="mao-total" style="display:flex;justify-content:space-between"><span>Deal verdict</span><span style="font-weight:600;color:${d.flipVerdictColor||'inherit'}">${d.flipVerdict||'—'}</span></div>
       </div>
     </div>
   </div>`;
