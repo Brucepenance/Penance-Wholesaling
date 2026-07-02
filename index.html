@@ -448,7 +448,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div class="fg"><label>Gross monthly rent ($)</label><input type="number" id="sf-rent" placeholder="2300" oninput="calcSF();calcConvOnly('sf')"></div>
           <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="sf-tax" placeholder="50" oninput="calcSF();calcConvOnly('sf')" onblur="roundTaxInsField(this)"></div>
           <div class="fg"><label>Insurance / month ($)</label><input type="number" id="sf-ins" placeholder="150" oninput="calcSF();calcConvOnly('sf')" onblur="roundTaxInsField(this)"></div>
-          <div class="fg"><label>Management (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sf-mgmt-pct" placeholder="10" value="10" oninput="calcSF()"></div>
+          <div class="fg"><label>Management &amp; Vacancy (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sf-mgmt-pct" placeholder="10" value="10" oninput="calcSF()"></div>
           <div class="fg"><label>CapEx &amp; Maintenance (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sf-capex-pct" placeholder="10" value="10" oninput="calcSF()"></div>
         </div>
         <details style="margin-top:10px">
@@ -509,7 +509,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <hr class="divider">
           <div style="font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Monthly breakdown</div>
           <div class="mao-row"><span>Gross rent</span><span id="sf-r-rent">—</span></div>
-          <div class="mao-row"><span>Mgmt / CapEx / vacancy / other</span><span id="sf-r-opex">—</span></div>
+          <div class="mao-row"><span>Mgmt / CapEx / Vacancy</span><span id="sf-r-opex">—</span></div>
           <div class="mao-row"><span>Taxes + insurance</span><span id="sf-r-taxins">—</span></div>
           <div class="mao-row"><span id="sf-r-pmt-label">Seller payment (P&amp;I)</span><span id="sf-r-pmt">—</span></div>
           <div class="mao-row highlight"><span>Net monthly cash flow</span><span id="sf-r-cf">—</span></div>
@@ -591,7 +591,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div class="fg"><label>Gross monthly rent ($)</label><input type="number" id="sub-rent" placeholder="1200" oninput="calcSub();calcConvOnly('sub')"></div>
           <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="sub-tax" placeholder="150" oninput="calcSub();calcConvOnly('sub')" onblur="roundTaxInsField(this)"></div>
           <div class="fg"><label>Insurance / month ($)</label><input type="number" id="sub-ins" placeholder="100" oninput="calcSub();calcConvOnly('sub')" onblur="roundTaxInsField(this)"></div>
-          <div class="fg"><label>Management (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sub-mgmt-pct" placeholder="10" value="10" oninput="calcSub();calcConvOnly('sub')"></div>
+          <div class="fg"><label>Management &amp; Vacancy (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sub-mgmt-pct" placeholder="10" value="10" oninput="calcSub();calcConvOnly('sub')"></div>
           <div class="fg"><label>CapEx &amp; Maintenance (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="sub-capex-pct" placeholder="10" value="10" oninput="calcSub();calcConvOnly('sub')"></div>
         </div>
         <details style="margin-top:10px">
@@ -634,7 +634,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <hr class="divider">
           <div style="font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Monthly cash flow</div>
           <div class="mao-row"><span>Gross rent</span><span id="sub-r-rent">—</span></div>
-          <div class="mao-row"><span>Mgmt / CapEx / vacancy / other</span><span id="sub-r-opex">—</span></div>
+          <div class="mao-row"><span>Mgmt / CapEx / Vacancy</span><span id="sub-r-opex">—</span></div>
           <div class="mao-row"><span>Taxes + insurance</span><span id="sub-r-taxins">—</span></div>
           <div class="mao-row"><span>Mortgage payment</span><span id="sub-r-loans">—</span></div>
           <div class="mao-row highlight"><span>Net cash flow</span><span id="sub-r-cf">—</span></div>
@@ -861,7 +861,7 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
             <div class="fg"><label>Potential gross monthly rent ($)</label><input type="number" id="fl-mf-rent" placeholder="3200" oninput="calcFlip()"></div>
             <div class="fg"><label>Property taxes / month ($)</label><input type="number" id="fl-mf-tax" placeholder="250" oninput="calcFlip()" onblur="roundTaxInsField(this)"></div>
             <div class="fg"><label>Insurance / month ($)</label><input type="number" id="fl-mf-ins" placeholder="150" oninput="calcFlip()" onblur="roundTaxInsField(this)"></div>
-            <div class="fg"><label>Management (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="fl-mf-mgmt" placeholder="10" value="10" oninput="calcFlip()"></div>
+            <div class="fg"><label>Management &amp; Vacancy (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="fl-mf-mgmt" placeholder="10" value="10" oninput="calcFlip()"></div>
             <div class="fg"><label>CapEx &amp; Maintenance (%) <span style="color:var(--sub);font-size:10px">preset 10%</span></label><input type="number" id="fl-mf-capex" placeholder="10" value="10" oninput="calcFlip()"></div>
           </div>
           <details style="margin-top:10px">
@@ -1091,6 +1091,10 @@ function switchTab(t){
 function render(){renderMetrics();renderPipeline();renderAllContacts();renderPipelineCalendar();}
 function fmt(n){return n?'$'+Number(n).toLocaleString():'—';}
 function fmtN(n){return(n>=0?'$':'−$')+Math.abs(Math.round(n)).toLocaleString();}
+// Use instead of (val||default) when 0 is a valid explicit entry.
+// blank/undefined/null → returns the preset default
+// 0 or any other number → returns that number as-is
+function withPreset(val,preset){return(val===''||val===undefined||val===null)?preset:+val;}
 // Real estate numbers should look like real estate numbers, not the output
 // of a spreadsheet — round to the nearest $500. Where a number is a ceiling
 // meant to hit a target return (a 20%-COC suggested offer, an MAO), pass
@@ -3086,8 +3090,8 @@ function sfDealTypeLabel(){
 }
 function calcSF(){
   const rent=+v('sf-rent')||0,tax=+v('sf-tax')||0,ins=+v('sf-ins')||0;
-  const sfMgmtPre=(+v('sf-mgmt-pct')||10)/100;
-  const sfCapexPre=(+v('sf-capex-pct')||10)/100;
+  const sfMgmtPre=withPreset(v('sf-mgmt-pct'),10)/100;
+  const sfCapexPre=withPreset(v('sf-capex-pct'),10)/100;
   const sfVacPre=(+v('sf-vacancy-pct')||0)/100;
   const sfHoaPre=+v('sf-hoa')||0;
   const sfOtherPre=+v('sf-other')||0;
@@ -3102,7 +3106,7 @@ function calcSF(){
   // → annualNOI - 0.20×assignFee = price × [0.20×(downPct+closingPct) + (1-downPct)/30]
   // → price = (annualNOI - 0.20×assignFee) / divisor
   if(rent){
-    const closingPctPre=(+v('sf-closing-pct')||2)/100;
+    const closingPctPre=withPreset(v('sf-closing-pct'),2)/100;
     const asgnFeeStr=v('sf-asgn');
     const asgnFeePre=asgnFeeStr!==''?+asgnFeeStr:5000;
     const downPct=0.10;
@@ -3123,7 +3127,7 @@ function calcSF(){
   const price=+v('sf-price')||0;
   if(!price)return;
   const down=+v('sf-down')||0;
-  const closingPct=(+v('sf-closing-pct')||2)/100;
+  const closingPct=withPreset(v('sf-closing-pct'),2)/100;
   const closing=price*closingPct;
   const rehab=+v('sf-rehab')||0,asgn=+v('sf-asgn')||0;
   const commPct=(+v('sf-commission-pct')||0)/100;
@@ -3137,7 +3141,7 @@ function calcSF(){
   if(sfPMode==='amort'){
     const rateRaw=v('sf-rate');
     const rate=(rateRaw!==''?+rateRaw:0)/100/12;
-    const amort=(+v('sf-amort')||30)*12;
+    const amort=withPreset(v('sf-amort'),30)*12;
     pmt=rate>0?loan*rate/(1-Math.pow(1+rate,-amort)):loan/amort;
     rateForBalloon=rate;
   } else if(sfPMode==='io'){
@@ -3161,7 +3165,7 @@ function calcSF(){
   const coc=totalEntry>0?(cf*12)/totalEntry:0;
 
   const hasBalloon=document.getElementById('sf-has-balloon')?.checked||false;
-  const balloon=hasBalloon?(+v('sf-balloon')||7):null;
+  const balloon=hasBalloon?withPreset(v('sf-balloon'),7):null;
   let bal=null;
   if(hasBalloon&&balloon){
     bal=loan;
@@ -3283,7 +3287,7 @@ function calcSubSensitivity(){
   const loanBal=+v('sub-l1bal')||0;
   const listingPct=(+v('sub-listing-pct')||0)/100;
   const buyerAgentPct=(+v('sub-buyer-agent-pct')||0)/100;
-  const closingPct=(+v('sub-closing-pct')||2)/100;
+  const closingPct=withPreset(v('sub-closing-pct'),2)/100;
   const sellerSplitRaw=adjustedEntry*splitPct;
   const sellerSplit=Math.round(sellerSplitRaw/500)*500;
   const yourCut=adjustedEntry-sellerSplit; // absorbs remainder
@@ -3358,7 +3362,7 @@ function calcSub(){
   const loanRate=(+v('sub-l1rate')||0)/100/12;
   const listingPct=(+v('sub-listing-pct')||0)/100;
   const buyerAgentPct=(+v('sub-buyer-agent-pct')||0)/100;
-  const closingPct=(+v('sub-closing-pct')||2)/100;
+  const closingPct=withPreset(v('sub-closing-pct'),2)/100;
   const rent=+v('sub-rent')||0,tax=+v('sub-tax')||0,ins=+v('sub-ins')||0;
   const splitPct=(+document.getElementById('sub-split')?.value||50)/100;
   const hasBalloon=document.getElementById('sub-has-balloon')?.checked||false;
@@ -3367,8 +3371,8 @@ function calcSub(){
   if(!rent&&!loanBal)return;
 
   // ── Cash flow ──────────────────────────────────────────────
-  const subMgmt=(+v('sub-mgmt-pct')||10)/100;
-  const subCapex=(+v('sub-capex-pct')||10)/100;
+  const subMgmt=withPreset(v('sub-mgmt-pct'),10)/100;
+  const subCapex=withPreset(v('sub-capex-pct'),10)/100;
   const subVacancy=(+v('sub-vacancy-pct')||0)/100;
   const subHoa=+v('sub-hoa')||0;
   const subOther=+v('sub-other')||0;
@@ -3518,7 +3522,7 @@ function calcFlip(){
   const assignFeeInput=roundFee(+v('fl-assign-fee')||0);
   const rawFeeSplit=v('fl-fee-split');
   const feeSplitPct=(rawFeeSplit===''?0:+rawFeeSplit)/100; // 0 = all cuts offer, 1 = all cuts investor profit
-  const closingPct=(+v('fl-closing-pct')||2)/100;
+  const closingPct=withPreset(v('fl-closing-pct'),2)/100;
   const commPct=(+v('fl-commission-pct')||0)/100;
   const coverComm=document.getElementById('fl-cover-commission')?.checked||false;
   const buyerCommPct=coverComm?(+document.getElementById('fl-buyer-comm-pct')?.value||100)/100:0;
@@ -3549,8 +3553,8 @@ function calcFlip(){
     const mfRent=+v('fl-mf-rent')||0;
     const mfTax=+v('fl-mf-tax')||0;
     const mfIns=+v('fl-mf-ins')||0;
-    const mfMgmt=(+v('fl-mf-mgmt')||10)/100;
-    const mfCapex=(+v('fl-mf-capex')||10)/100;
+    const mfMgmt=withPreset(v('fl-mf-mgmt'),10)/100;
+    const mfCapex=withPreset(v('fl-mf-capex'),10)/100;
     const mfVac=(+v('fl-mf-vacancy')||0)/100;
     const mfHoa=+v('fl-mf-hoa')||0;
     const mfOther=+v('fl-mf-other')||0;
@@ -3758,19 +3762,19 @@ function collectOvenData(){
   if(mode==='sf'){
     d.sfPrice=+v('sf-price')||0;
     d.sfDown=+v('sf-down')||0;
-    d.sfClosingPct=+v('sf-closing-pct')||2;
+    d.sfClosingPct=withPreset(v('sf-closing-pct'),2);
     d.sfRehab=+v('sf-rehab')||0;
     d.sfAsgn=v('sf-asgn')===''?(currentDealIdx!==null?0:5000):+v('sf-asgn');
     d.sfRate=v('sf-rate');
     d.sfRateIO=v('sf-rate-io');
     d.sfRateFixed=v('sf-rate-fixed');
-    d.sfAmort=+v('sf-amort')||30;
-    d.sfBalloon=document.getElementById('sf-has-balloon')?.checked?(+v('sf-balloon')||7):null;
+    d.sfAmort=withPreset(v('sf-amort'),30);
+    d.sfBalloon=document.getElementById('sf-has-balloon')?.checked?withPreset(v('sf-balloon'),7):null;
     d.sfRent=+v('sf-rent')||0;
     d.sfTax=+v('sf-tax')||0;
     d.sfIns=+v('sf-ins')||0;
-    d.sfMgmt=+v('sf-mgmt-pct')||10;
-    d.sfCapex=+v('sf-capex-pct')||10;
+    d.sfMgmt=withPreset(v('sf-mgmt-pct'),10);
+    d.sfCapex=withPreset(v('sf-capex-pct'),10);
     d.sfCommPct=+v('sf-commission-pct')||0;
     d.sfPMode=sfPMode;
     // Grab displayed results
@@ -3812,13 +3816,13 @@ function collectOvenData(){
     d.subRent=+v('sub-rent')||0;
     d.subTax=+v('sub-tax')||0;
     d.subIns=+v('sub-ins')||0;
-    d.subMgmt=+v('sub-mgmt-pct')||10;
-    d.subCapex=+v('sub-capex-pct')||10;
+    d.subMgmt=withPreset(v('sub-mgmt-pct'),10);
+    d.subCapex=withPreset(v('sub-capex-pct'),10);
     d.subHoa=+v('sub-hoa')||0;
     d.subVacancy=+v('sub-vacancy-pct')||0;
     d.subOther=+v('sub-other')||0;
     d.subSplitPct=+document.getElementById('sub-split')?.value||50;
-    d.subBalloon=document.getElementById('sub-has-balloon')?.checked?(+v('sub-balloon')||7):null;
+    d.subBalloon=document.getElementById('sub-has-balloon')?.checked?withPreset(v('sub-balloon'),7):null;
     d.subPrice=+v('prop-listprice')||0;
     // Results — read raw data attributes where available, textContent otherwise
     const subOfferEl=document.getElementById('sub-r-offer');
@@ -3852,8 +3856,8 @@ function collectOvenData(){
     d.subVerdictText=document.getElementById('sub-verdict-box')?.textContent||'';
     d.subVerdictBg=document.getElementById('sub-verdict-box')?.style.background||'';
     d.subVerdictColor=document.getElementById('sub-verdict-box')?.style.color||'';
-    d.subMgmt=+v('sub-mgmt-pct')||10;
-    d.subCapex=+v('sub-capex-pct')||10;
+    d.subMgmt=withPreset(v('sub-mgmt-pct'),10);
+    d.subCapex=withPreset(v('sub-capex-pct'),10);
     d.subConvMax=document.getElementById('sub-conv-maxprice')?.textContent||'';
     d.subConvEntry=document.getElementById('sub-conv-down')?.textContent||'';
     d.subConvPmt=document.getElementById('sub-conv-pmt')?.textContent||'';
@@ -3885,8 +3889,8 @@ function collectOvenData(){
     d.flipMfRent=+v('fl-mf-rent')||0;
     d.flipMfTax=+v('fl-mf-tax')||0;
     d.flipMfIns=+v('fl-mf-ins')||0;
-    d.flipMfMgmt=+v('fl-mf-mgmt')||10;
-    d.flipMfCapex=+v('fl-mf-capex')||10;
+    d.flipMfMgmt=withPreset(v('fl-mf-mgmt'),10);
+    d.flipMfCapex=withPreset(v('fl-mf-capex'),10);
     d.flipMfHoa=+v('fl-mf-hoa')||0;
     d.flipMfVacancy=+v('fl-mf-vacancy')||0;
     d.flipMfOther=+v('fl-mf-other')||0;
@@ -5885,11 +5889,11 @@ function buildBuyerSummary(d){
       rows.push(['Offer price',fmtC(d.sfPrice)]);
       rows.push(['Down payment',fmtC((+d.sfDown||0)+assignmentFee)]);
       rows.push(['Interest rate',(()=>{const r=sfEffectiveRate(d);return r!==null?r+'%':'0%';})()]);
-      rows.push(['Amortization',(d.sfAmort||30)+' yrs'+(d.sfBalloon?' · '+d.sfBalloon+'yr balloon':'')]);
+      rows.push(['Amortization',(withPreset(d.sfAmort,30))+' yrs'+(d.sfBalloon?' · '+d.sfBalloon+'yr balloon':'')]);
       rows.push(['Monthly payment',sfCleanMoney(d.sfResultPmt)||'—']);
       const sfTaxIns=(+d.sfTax||0)+(+d.sfIns||0);
       rows.push(['Taxes + insurance / mo',fmtC(sfTaxIns)]);
-      const sfMgmtPct=(+d.sfMgmt||10),sfCapexPct=(+d.sfCapex||10);
+      const sfMgmtPct=withPreset(d.sfMgmt,10),sfCapexPct=withPreset(d.sfCapex,10);
       const sfMgmtCapex=(+d.sfRent||0)*(sfMgmtPct+sfCapexPct)/100;
       rows.push(['Mgmt + CapEx / mo',fmtC(sfMgmtCapex)+' ('+(sfMgmtPct+sfCapexPct)+'%)']);
       rows.push(['Gross monthly rent',fmtC(d.sfRent)]);
@@ -5915,7 +5919,7 @@ function buildBuyerSummary(d){
     rows.push(['Monthly mortgage',fmtC(d.subMortgage)]);
     const subTaxIns=(+d.subTax||0)+(+d.subIns||0);
     rows.push(['Taxes + insurance / mo',fmtC(subTaxIns)]);
-    const subMgmtPct=(+d.subMgmt||10),subCapexPct=(+d.subCapex||10);
+    const subMgmtPct=withPreset(d.subMgmt,10),subCapexPct=withPreset(d.subCapex,10);
     const subMgmtCapex=(+d.subRent||0)*(subMgmtPct+subCapexPct)/100;
     rows.push(['Mgmt + CapEx / mo',fmtC(subMgmtCapex)+' ('+(subMgmtPct+subCapexPct)+'%)']);
     rows.push(['Gross monthly rent',fmtC(d.subRent)]);
@@ -5978,10 +5982,10 @@ function buildBuyerSummaryText(d){
       lines.push('Offer price: '+fmtC(d.sfPrice));
       lines.push('Down payment: '+fmtC((+d.sfDown||0)+assignmentFee));
       lines.push('Interest rate: '+((()=>{const r=sfEffectiveRate(d);return r!==null?r+'%':'0%';})()));
-      lines.push('Amortization: '+(d.sfAmort||30)+' yrs'+(d.sfBalloon?' with '+d.sfBalloon+'yr balloon':''));
+      lines.push('Amortization: '+(withPreset(d.sfAmort,30))+' yrs'+(d.sfBalloon?' with '+d.sfBalloon+'yr balloon':''));
       lines.push('Monthly payment: '+(sfCleanMoney(d.sfResultPmt)||'—'));
       lines.push('Taxes + insurance / mo: '+fmtC((+d.sfTax||0)+(+d.sfIns||0)));
-      const sfMP=(+d.sfMgmt||10),sfCP=(+d.sfCapex||10);
+      const sfMP=withPreset(d.sfMgmt,10),sfCP=withPreset(d.sfCapex,10);
       lines.push('Mgmt + CapEx / mo: '+fmtC((+d.sfRent||0)*(sfMP+sfCP)/100)+' ('+(sfMP+sfCP)+'%)');
       lines.push('Gross monthly rent: '+fmtC(d.sfRent));
       lines.push('Monthly cash flow: '+(d.sfResultCF||'—'));
@@ -6002,7 +6006,7 @@ function buildBuyerSummaryText(d){
     lines.push('Buyer entry: '+fmtC(subEntryAdjusted));
     lines.push('Monthly mortgage: '+fmtC(d.subMortgage));
     lines.push('Taxes + insurance / mo: '+fmtC((+d.subTax||0)+(+d.subIns||0)));
-    const subMP=(+d.subMgmt||10),subCP=(+d.subCapex||10);
+    const subMP=withPreset(d.subMgmt,10),subCP=withPreset(d.subCapex,10);
     lines.push('Mgmt + CapEx / mo: '+fmtC((+d.subRent||0)*(subMP+subCP)/100)+' ('+(subMP+subCP)+'%)');
     lines.push('Gross monthly rent: '+fmtC(d.subRent));
     const subCfMonthly=parseSignedAmt(d.subCF);
@@ -6415,7 +6419,7 @@ function renderDealViewSF(d,content,summary){
   if(d.sfBalloon&&loan){
     const bRate=(d.sfRate!==undefined&&d.sfRate!==''?+d.sfRate:0)/100/12;
     let bal=loan;
-    const amortMonths=(d.sfAmort||30)*12;
+    const amortMonths=(withPreset(d.sfAmort,30))*12;
     const pmt=bRate>0?loan*bRate/(1-Math.pow(1+bRate,-amortMonths)):loan/amortMonths;
     for(let m=0;m<d.sfBalloon*12;m++){const interest=bal*bRate;bal=Math.max(0,bal-(pmt-interest));}
     balloonBalNum=bal;
@@ -6487,7 +6491,7 @@ function renderDealViewSF(d,content,summary){
         ${dvDivider()}
         ${dvSection('Monthly breakdown')}
         ${dvRow('Gross rent',fmt(d.sfRent)+'/mo')}
-        ${dvRow('Mgmt / CapEx / expenses (~'+((+d.sfMgmt||10)+(+d.sfCapex||10))+'%)',d.sfResultOpex)}
+        ${dvRow('Mgmt / CapEx / Vacancy (~'+(withPreset(d.sfMgmt,10)+withPreset(d.sfCapex,10))+'%)',d.sfResultOpex)}
         ${dvRow('Property taxes','−'+fmt(d.sfTax)+'/mo')}
         ${dvRow('Insurance','−'+fmt(d.sfIns)+'/mo')}
         ${dvRow('Seller payment (P&I)',sfCleanMoney(d.sfResultPmt))}
@@ -6559,7 +6563,7 @@ function renderDealViewSF(d,content,summary){
     </div>
     <div style="font-size:12px;color:var(--sub);line-height:1.8">
       <strong style="color:var(--text)">${d.address||'Property'}</strong>${d.sqft?' · '+d.sqft+' sqft':''}${d.propType?' · '+d.propType:''}<br>
-      Offer <strong style="color:#3ab56e">${fmt(d.sfPrice)}</strong> · ${rate} interest · ${d.sfAmort||30}yr amort${d.sfBalloon?' · '+d.sfBalloon+'yr balloon':''}<br>
+      Offer <strong style="color:#3ab56e">${fmt(d.sfPrice)}</strong> · ${rate} interest · ${withPreset(d.sfAmort,30)}yr amort${d.sfBalloon?' · '+d.sfBalloon+'yr balloon':''}<br>
       Monthly payment <strong>${sfCleanMoney(d.sfResultPmt)||'—'}</strong> · CF <strong>${d.sfResultCF||'—'}</strong> · COC <strong style="color:#3ab56e">${d.sfResultCOC||'—'}</strong><br>
       Conventional ceiling <strong>${d.sfConvMax||'—'}</strong>${d.sfConvMsg?' · '+d.sfConvMsg:''}<br>
       ${d.sfVerdictText?`<span style="color:${d.sfVerdictColor||'#4ade80'}">${d.sfVerdictText}</span>`:''}
@@ -6572,8 +6576,8 @@ function renderDealViewSub(d,content,summary){
   // Conventional comparison and offer approach only show pre-LOI (New lead / Follow up)
   const preLOI=d.stage==='New lead'||d.stage==='Follow up';
   const splitPct=(d.subSplitPct||50)/100;
-  const opexPct=((d.subMgmt||10)+(d.subCapex||10)+(d.subVacancy||0))/100;
-  const opexPctDisplay=(d.subMgmt||10)+(d.subCapex||10)+(d.subVacancy||0);
+  const opexPct=((withPreset(d.subMgmt,10))+(withPreset(d.subCapex,10))+(d.subVacancy||0))/100;
+  const opexPctDisplay=(withPreset(d.subMgmt,10))+(withPreset(d.subCapex,10))+(d.subVacancy||0);
   const opex=(d.subRent||0)*opexPct+(d.subHoa||0)+(d.subOther||0);
   const cfMonthly=(d.subRent||0)-opex-(d.subTax||0)-(d.subIns||0)-(d.subMortgage||0);
   const cfAnnual=cfMonthly*12;
@@ -6677,7 +6681,7 @@ function renderDealViewSub(d,content,summary){
   +dvDivider()
   +dvSection('Cash flow calculation')
   +dvRow('Gross rent',fmtC(d.subRent)+'/mo')
-  +dvRow('Mgmt / CapEx / vacancy / other ('+opexPctDisplay+'%)','−'+fmtC(opex)+'/mo')
+  +dvRow('Mgmt / CapEx / Vacancy (~'+opexPctDisplay+'%)','−'+fmtC(opex)+'/mo')
   +dvRow('Property taxes','−'+fmtC(d.subTax)+'/mo')
   +dvRow('Insurance','−'+fmtC(d.subIns)+'/mo')
   +dvRow('Mortgage payment','−'+fmtC(d.subMortgage)+'/mo')
@@ -6818,11 +6822,11 @@ function openInOven(i){
       ovenSwitch('sf');
       setV('sf-price',d.sfPrice||'');setV('sf-down',d.sfDown||'');
       setV('sf-down-pct',d.sfPrice?+((+d.sfDown||0)/d.sfPrice*100).toFixed(1):'');
-      setV('sf-closing-pct',d.sfClosingPct||2);setV('sf-rehab',d.sfRehab||'');
+      setV('sf-closing-pct',withPreset(d.sfClosingPct,2));setV('sf-rehab',d.sfRehab||'');
       setV('sf-asgn',d.sfAsgn!==undefined?d.sfAsgn:5000);setV('sf-rate',d.sfRate||'');
-      setV('sf-amort',d.sfAmort||30);setV('sf-rent',d.sfRent||'');
+      setV('sf-amort',withPreset(d.sfAmort,30));setV('sf-rent',d.sfRent||'');
       setV('sf-tax',d.sfTax||'');setV('sf-ins',d.sfIns||'');
-      setV('sf-mgmt-pct',d.sfMgmt||10);setV('sf-capex-pct',d.sfCapex||10);
+      setV('sf-mgmt-pct',withPreset(d.sfMgmt,10));setV('sf-capex-pct',withPreset(d.sfCapex,10));
       setV('sf-commission-pct',d.sfCommPct||'');
       if(d.sfBalloon){document.getElementById('sf-has-balloon').checked=true;sfBalloonToggle();setV('sf-balloon',d.sfBalloon);}
       if(d.sfPMode)setPMode(d.sfPMode);
@@ -6860,8 +6864,8 @@ function openInOven(i){
         else rehabSumEl.style.display='none';
       }
       setV('fl-mf-rent',d.flipMfRent||'');setV('fl-mf-tax',d.flipMfTax||'');
-      setV('fl-mf-ins',d.flipMfIns||'');setV('fl-mf-mgmt',d.flipMfMgmt||10);
-      setV('fl-mf-capex',d.flipMfCapex||10);setV('fl-mf-hoa',d.flipMfHoa||'');
+      setV('fl-mf-ins',d.flipMfIns||'');setV('fl-mf-mgmt',withPreset(d.flipMfMgmt,10));
+      setV('fl-mf-capex',withPreset(d.flipMfCapex,10));setV('fl-mf-hoa',d.flipMfHoa||'');
       setV('fl-mf-vacancy',d.flipMfVacancy||'');setV('fl-mf-other',d.flipMfOther||'');
       setV('fl-assign-fee',d.flipAssignFee||'');setV('fl-fee-split',d.flipFeeSplit!==undefined?d.flipFeeSplit:0);
       setV('fl-actual-offer',d.flipActualOffer||'');
