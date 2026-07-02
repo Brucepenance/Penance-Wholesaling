@@ -3237,9 +3237,9 @@ function calcSF(){
   const pmtRow=document.getElementById('sf-r-pmt-label');if(pmtRow)pmtRow.textContent=pmtLabel;
   setEl('sf-r-pmt','−$'+Math.round(pmt).toLocaleString()+'/mo');
   const cfEl=document.getElementById('sf-r-cf');
-  if(cfEl){cfEl.textContent=fmtN(cf)+'/mo';cfEl.style.color=cf>=0?'#3ab56e':'#e94560';}
+  if(cfEl){cfEl.textContent=fmtN(cf)+'/mo';cfEl.setAttribute('style','color:'+(cf>=0?'#3ab56e':'#e94560')+';font-weight:600');}
   const cfaEl=document.getElementById('sf-r-cfa');
-  if(cfaEl){cfaEl.textContent=fmtN(cf*12)+'/yr';cfaEl.style.color=cf>=0?'#3ab56e':'#e94560';}
+  if(cfaEl){cfaEl.textContent=fmtN(cf*12)+'/yr';cfaEl.setAttribute('style','color:'+(cf>=0?'#3ab56e':'#e94560')+';font-weight:600');}
   setEl('sf-r-loan','$'+Math.round(loan).toLocaleString());
 
   // Cap rate = NOI / price basis (list or purchase, user's choice)
@@ -3477,10 +3477,10 @@ function calcSub(){
   setEl('sub-r-taxins',(tax||ins)?'−$'+(tax+ins).toLocaleString()+'/mo':'—');
   setEl('sub-r-loans',mortgage?'−$'+mortgage.toLocaleString()+'/mo':'—');
   const cfEl=document.getElementById('sub-r-cf');
-  if(cfEl){cfEl.textContent=fmtN(cfMonthly)+'/mo';cfEl.style.color=cfMonthly>=0?'#3ab56e':'#e94560';}
+  if(cfEl){cfEl.textContent=fmtN(cfMonthly)+'/mo';cfEl.setAttribute('style','color:'+(cfMonthly>=0?'#3ab56e':'#e94560')+';font-weight:600');}
   if(cfaEl2){
     cfaEl2.textContent=fmtN(cfAnnual)+'/yr';
-    cfaEl2.style.color=cfAnnual>=0?'#3ab56e':'#e94560';
+    cfaEl2.setAttribute('style','color:'+(cfAnnual>=0?'#3ab56e':'#e94560')+';font-weight:600');
     cfaEl2.dataset.raw=String(cfAnnual);
   }
 
@@ -3760,7 +3760,7 @@ function collectOvenData(){
     d.sfDown=+v('sf-down')||0;
     d.sfClosingPct=+v('sf-closing-pct')||2;
     d.sfRehab=+v('sf-rehab')||0;
-    d.sfAsgn=v('sf-asgn')===''?5000:+v('sf-asgn');
+    d.sfAsgn=v('sf-asgn')===''?(currentDealIdx!==null?0:5000):+v('sf-asgn');
     d.sfRate=v('sf-rate');
     d.sfRateIO=v('sf-rate-io');
     d.sfRateFixed=v('sf-rate-fixed');
@@ -3778,14 +3778,14 @@ function collectOvenData(){
     d.sfResultEntryPct=document.getElementById('sf-r-entry-pct')?.textContent||'';
     d.sfResultOpex=document.getElementById('sf-r-opex')?.textContent||'';
     d.sfResultCF=document.getElementById('sf-r-cf')?.textContent||'';
-    d.sfResultCFNeg=(+document.getElementById('sf-r-cf')?.textContent?.replace(/[^0-9.-]/g,'')||0)<0;
+    d.sfResultCFNeg=document.getElementById('sf-r-cf')?.style.color==='#e94560'||document.getElementById('sf-r-cf')?.getAttribute('style')?.includes('#e94560')||false;
     d.sfResultCOC=document.getElementById('sf-verdict-box')?.textContent||''; // kept for buyer summary compat
     d.sfResultCap=document.getElementById('sf-r-cap')?.textContent||'';
     d.sfCapBasis=document.getElementById('sf-cap-basis')?.value||'list';
     d.sfCapColor=document.getElementById('sf-r-cap')?.style.color||'';
     d.sfResultPmt=document.getElementById('sf-r-pmt')?.textContent||'';
     d.sfResultCFA=document.getElementById('sf-r-cfa')?.textContent||'';
-    d.sfResultCFANeg=(+document.getElementById('sf-r-cfa')?.textContent?.replace(/[^0-9.-]/g,'')||0)<0;
+    d.sfResultCFANeg=document.getElementById('sf-r-cfa')?.getAttribute('style')?.includes('#e94560')||false;
     d.sfResultBal=document.getElementById('sf-r-bal')?.textContent||'';
     d.sfResultCommAmt=document.getElementById('sf-r-comm-amt')?.textContent||'';
     d.sfResultCommSeller=document.getElementById('sf-r-comm-seller')?.textContent||'';
@@ -6819,7 +6819,7 @@ function openInOven(i){
       setV('sf-price',d.sfPrice||'');setV('sf-down',d.sfDown||'');
       setV('sf-down-pct',d.sfPrice?+((+d.sfDown||0)/d.sfPrice*100).toFixed(1):'');
       setV('sf-closing-pct',d.sfClosingPct||2);setV('sf-rehab',d.sfRehab||'');
-      setV('sf-asgn',d.sfAsgn||5000);setV('sf-rate',d.sfRate||'');
+      setV('sf-asgn',d.sfAsgn!==undefined?d.sfAsgn:5000);setV('sf-rate',d.sfRate||'');
       setV('sf-amort',d.sfAmort||30);setV('sf-rent',d.sfRent||'');
       setV('sf-tax',d.sfTax||'');setV('sf-ins',d.sfIns||'');
       setV('sf-mgmt-pct',d.sfMgmt||10);setV('sf-capex-pct',d.sfCapex||10);
