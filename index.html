@@ -518,7 +518,14 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div class="mao-row"><span>Loan amount</span><span id="sf-r-loan">—</span></div>
           <div class="mao-row" id="sf-r-bal-row"><span>Balance at balloon</span><span id="sf-r-bal">—</span></div>
           <div class="mao-total" id="sf-verdict-row" style="display:flex;justify-content:space-between">
-            <span>COC return</span><span id="sf-r-coc">—</span>
+            <span style="display:flex;align-items:center;gap:8px">
+              Cap rate
+              <select id="sf-cap-basis" onchange="calcSF()" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-family:var(--font);cursor:pointer">
+                <option value="list">vs list price</option>
+                <option value="purchase">vs purchase price</option>
+              </select>
+            </span>
+            <span id="sf-r-cap">—</span>
           </div>
         </div>
         <div id="sf-verdict-box" style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;display:none;margin-bottom:12px"></div>
@@ -633,7 +640,14 @@ const SUPABASE_ANON_KEY='sb_publishable_sDVwRBlylETctHd03k6VdA_XExl1fU_';
           <div class="mao-row highlight"><span>Net cash flow</span><span id="sub-r-cf">—</span></div>
           <div class="mao-row highlight"><span>Annual cash flow</span><span id="sub-r-cfa">—</span></div>
           <div class="mao-total" style="display:flex;justify-content:space-between">
-            <span>COC return (buyer)</span><span id="sub-r-coc">—</span>
+            <span style="display:flex;align-items:center;gap:8px">
+              Cap rate
+              <select id="sub-cap-basis" onchange="calcSub()" style="font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--brd);background:var(--bg2);color:var(--text);font-family:var(--font);cursor:pointer">
+                <option value="list">vs list price</option>
+                <option value="purchase">vs purchase price</option>
+              </select>
+            </span>
+            <span id="sub-r-cap">—</span>
           </div>
         </div>
         <div id="sub-verdict-box" style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;display:none"></div>
@@ -3227,8 +3241,16 @@ function calcSF(){
   const cfaEl=document.getElementById('sf-r-cfa');
   if(cfaEl){cfaEl.textContent=fmtN(cf*12)+'/yr';cfaEl.style.color=cf>=0?'#3ab56e':'#e94560';}
   setEl('sf-r-loan','$'+Math.round(loan).toLocaleString());
-  const cocEl=document.getElementById('sf-r-coc');
-  if(cocEl){cocEl.textContent=(coc*100).toFixed(1)+'%';cocEl.style.color=(coc*100>=19.95)?'#3ab56e':coc>=0.10?'#f5a623':'#e94560';}
+
+  // Cap rate = NOI / price basis (list or purchase, user's choice)
+  const noi=rent-opex-tax-ins;
+  const capBasis=document.getElementById('sf-cap-basis')?.value||'list';
+  const listPrice=+v('prop-listprice')||0;
+  const capBasisPrice=capBasis==='purchase'?price:listPrice||price;
+  const capRate=capBasisPrice>0?(noi*12)/capBasisPrice:0;
+  const capEl=document.getElementById('sf-r-cap');
+  if(capEl){capEl.textContent=capBasisPrice>0?(capRate*100).toFixed(1)+'%':'—';capEl.style.color=capRate>=0.07?'#3ab56e':capRate>=0.05?'#f5a623':'#e94560';}
+
   verdictBox('sf-verdict-box',coc,0.10);
   calcConv('sf',rent,tax,ins,+v('prop-listprice')||price);
 }
@@ -3462,12 +3484,14 @@ function calcSub(){
     cfaEl2.dataset.raw=String(cfAnnual);
   }
 
-  // COC
-  const cocEl=document.getElementById('sub-r-coc');
-  if(cocEl){
-    cocEl.textContent=(coc*100).toFixed(1)+'%';
-    cocEl.style.color=coc>0.20?'#3ab56e':coc>=0.20?'#3ab56e':coc>=0.10?'#f5a623':'#e94560';
-  }
+  // Cap rate (replaces the old COC display here; COC still shows via verdictBox)
+  const subCapBasis=document.getElementById('sub-cap-basis')?.value||'list';
+  const subListPrice=+v('prop-listprice')||0;
+  const subCapBasisPrice=subCapBasis==='purchase'?purchasePrice:(subListPrice||purchasePrice);
+  const subNoi=rent-opex-tax-ins;
+  const subCapRate=subCapBasisPrice>0?(subNoi*12)/subCapBasisPrice:0;
+  const subCapEl=document.getElementById('sub-r-cap');
+  if(subCapEl){subCapEl.textContent=subCapBasisPrice>0?(subCapRate*100).toFixed(1)+'%':'—';subCapEl.style.color=subCapRate>=0.07?'#3ab56e':subCapRate>=0.05?'#f5a623':'#e94560';}
   if(rent)verdictBox('sub-verdict-box',coc,0.10);
   calcConv('sub',rent,tax,ins,price);
   calcSubSensitivity();
@@ -3754,9 +3778,14 @@ function collectOvenData(){
     d.sfResultEntryPct=document.getElementById('sf-r-entry-pct')?.textContent||'';
     d.sfResultOpex=document.getElementById('sf-r-opex')?.textContent||'';
     d.sfResultCF=document.getElementById('sf-r-cf')?.textContent||'';
-    d.sfResultCOC=document.getElementById('sf-r-coc')?.textContent||'';
+    d.sfResultCFNeg=(+document.getElementById('sf-r-cf')?.textContent?.replace(/[^0-9.-]/g,'')||0)<0;
+    d.sfResultCOC=document.getElementById('sf-verdict-box')?.textContent||''; // kept for buyer summary compat
+    d.sfResultCap=document.getElementById('sf-r-cap')?.textContent||'';
+    d.sfCapBasis=document.getElementById('sf-cap-basis')?.value||'list';
+    d.sfCapColor=document.getElementById('sf-r-cap')?.style.color||'';
     d.sfResultPmt=document.getElementById('sf-r-pmt')?.textContent||'';
     d.sfResultCFA=document.getElementById('sf-r-cfa')?.textContent||'';
+    d.sfResultCFANeg=(+document.getElementById('sf-r-cfa')?.textContent?.replace(/[^0-9.-]/g,'')||0)<0;
     d.sfResultBal=document.getElementById('sf-r-bal')?.textContent||'';
     d.sfResultCommAmt=document.getElementById('sf-r-comm-amt')?.textContent||'';
     d.sfResultCommSeller=document.getElementById('sf-r-comm-seller')?.textContent||'';
@@ -3812,8 +3841,13 @@ function collectOvenData(){
     d.subTotalCosts=document.getElementById('sub-r-total-costs')?.textContent||'';
     d.subResultOpex=document.getElementById('sub-r-opex')?.textContent||'';
     d.subCF=document.getElementById('sub-r-cf')?.textContent||'';
+    d.subCFNeg=(document.getElementById('sub-r-cf')?.style.color||'')===('#e94560');
     d.subCFA=document.getElementById('sub-r-cfa')?.textContent||'';
-    d.subCOC=document.getElementById('sub-r-coc')?.textContent||'';
+    d.subCFANeg=(document.getElementById('sub-r-cfa')?.style.color||'')===('#e94560');
+    d.subCOC=document.getElementById('sub-verdict-box')?.textContent||''; // kept for buyer summary compat
+    d.subCap=document.getElementById('sub-r-cap')?.textContent||'';
+    d.subCapBasis=document.getElementById('sub-cap-basis')?.value||'list';
+    d.subCapColor=document.getElementById('sub-r-cap')?.style.color||'';
     d.subBalloonBal=document.getElementById('sub-r-balloon-bal')?.textContent||'';
     d.subVerdictText=document.getElementById('sub-verdict-box')?.textContent||'';
     d.subVerdictBg=document.getElementById('sub-verdict-box')?.style.background||'';
@@ -6457,9 +6491,9 @@ function renderDealViewSF(d,content,summary){
         ${dvRow('Property taxes','−'+fmt(d.sfTax)+'/mo')}
         ${dvRow('Insurance','−'+fmt(d.sfIns)+'/mo')}
         ${dvRow('Seller payment (P&I)',sfCleanMoney(d.sfResultPmt))}
-        ${dvRow('Monthly cash flow',d.sfResultCF,{highlight:true,color:d.sfResultCF&&d.sfResultCF.startsWith('-')?red:green})}
-        ${dvRow('Annual cash flow',d.sfResultCFA,{highlight:true,color:d.sfResultCFA&&d.sfResultCFA.startsWith('-')?red:green})}
-        <div class="mao-total" style="display:flex;justify-content:space-between"><span>COC return</span><span style="color:${green};font-weight:600">${d.sfResultCOC||'—'}</span></div>
+        ${dvRow('Monthly cash flow',d.sfResultCF,{highlight:true,color:d.sfResultCFNeg?red:green})}
+        ${dvRow('Annual cash flow',d.sfResultCFA,{highlight:true,color:d.sfResultCFANeg?red:green})}
+        <div class="mao-total" style="display:flex;justify-content:space-between"><span>Cap rate ${d.sfCapBasis==='purchase'?'(vs purchase price)':'(vs list price)'}</span><span style="color:${d.sfCapColor||green};font-weight:600">${d.sfResultCap||'—'}</span></div>
       </div>
       ${d.sfVerdictText?`<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:${d.sfVerdictBg||'#052e16'};color:${d.sfVerdictColor||'#4ade80'};margin-bottom:12px">${d.sfVerdictText}</div>`:''}
       <div class="mao-box">
@@ -6521,7 +6555,7 @@ function renderDealViewSF(d,content,summary){
       <div class="res-box"><div class="res-label">Stage</div><div class="res-val">${d.stage||'—'}</div></div>
       <div class="res-box"><div class="res-label">Offer price</div><div class="res-val" style="color:#3ab56e">${fmt(d.sfPrice)}</div></div>
       <div class="res-box"><div class="res-label">Total cash in</div><div class="res-val">${d.sfResultEntry||'—'}</div></div>
-      <div class="res-box"><div class="res-label">COC return</div><div class="res-val" style="color:#3ab56e">${d.sfResultCOC||'—'}</div></div>
+      <div class="res-box"><div class="res-label">Cap rate ${d.sfCapBasis==='purchase'?'(purchase)':'(list)'}</div><div class="res-val" style="color:${d.sfCapColor||'#3ab56e'}">${d.sfResultCap||'—'}</div></div>
     </div>
     <div style="font-size:12px;color:var(--sub);line-height:1.8">
       <strong style="color:var(--text)">${d.address||'Property'}</strong>${d.sqft?' · '+d.sqft+' sqft':''}${d.propType?' · '+d.propType:''}<br>
@@ -6649,7 +6683,7 @@ function renderDealViewSub(d,content,summary){
   +dvRow('Mortgage payment','−'+fmtC(d.subMortgage)+'/mo')
   +'<div class="mao-row highlight"><span>Monthly cash flow</span><span style="color:'+(cfMonthly>=0?green:red)+';font-weight:600">'+fmtN2(cfMonthly)+'/mo</span></div>'
   +'<div class="mao-row highlight"><span>Annual cash flow</span><span style="color:'+(cfAnnual>=0?green:red)+';font-weight:600">'+fmtN2(cfAnnual)+'/yr</span></div>'
-  +'<div class="mao-total" style="display:flex;justify-content:space-between"><span>COC return</span><span style="color:'+(coc>=0.20?green:coc>=0.10?gold:red)+';font-weight:600">'+fmtPct(coc*100)+'</span></div>'
+  +'<div class="mao-total" style="display:flex;justify-content:space-between"><span>Cap rate '+(d.subCapBasis==='purchase'?'(vs purchase price)':'(vs list price)')+'</span><span style="color:'+(d.subCapColor||green)+';font-weight:600">'+(d.subCap||'—')+'</span></div>'
   +'</div>'
   +verdictHtml
   +'</div></div>';
