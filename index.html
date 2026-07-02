@@ -2327,7 +2327,7 @@ function verdictBox(boxId,coc,minCoc){
   else if(coc>=0.201){box.textContent='Good deal ✓  COC '+pct.toFixed(1)+'%';box.style.background='#052e16';box.style.color='#4ade80';}
   else if(coc>=0.20||readsAs20){box.textContent='Meets minimum ✓  COC '+pct.toFixed(1)+'%';box.style.background='#0a2e1a';box.style.color='#4ade80';}
   else if(coc>=minCoc){box.textContent='Borderline — COC '+pct.toFixed(1)+'% (target 20%+)';box.style.background='#3b2700';box.style.color='#fbbf24';}
-  else{box.textContent='Weak deal — COC '+pct.toFixed(1)+'% (min '+(minCoc*100).toFixed(0)+'%)';box.style.background='#2d0a0a';box.style.color='#f87171';}
+  else{box.textContent='Weak — COC '+pct.toFixed(1)+'%';box.style.background='#2d0a0a';box.style.color='#f87171';}
 }
 
 // ── Photo functions ────────────────────────────────────────
@@ -6609,7 +6609,7 @@ function renderDealViewSub(d,content,summary){
   const fmtC=n=>n?'$'+Math.round(n).toLocaleString():'—';
   const fmtN2=n=>(n>=0?'$':'−$')+Math.abs(Math.round(n)).toLocaleString();
   const fmtPct=(p,dp=1)=>Number(p).toFixed(dp).replace(/\.0$/,'')+'%';
-  const verdictHtml=coc>=0.25?'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#052e16;color:#4ade80;margin-bottom:12px">Strong deal ✓  COC '+fmtPct(coc*100)+'</div>':coc>=0.201?'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#052e16;color:#4ade80;margin-bottom:12px">Good deal ✓  COC '+fmtPct(coc*100)+'</div>':coc>=0.199?'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#0a2e1a;color:#4ade80;margin-bottom:12px">Meets minimum ✓  COC '+fmtPct(coc*100)+'</div>':coc>=0.10?'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#3b2700;color:#fbbf24;margin-bottom:12px">Borderline — COC '+fmtPct(coc*100)+'</div>':'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#2d0a0a;color:#f87171;margin-bottom:12px">Weak deal — COC '+fmtPct(coc*100)+'</div>';
+  const verdictHtml=coc>=0.25?'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#052e16;color:#4ade80;margin-bottom:12px">Strong deal ✓  COC '+fmtPct(coc*100)+'</div>':coc>=0.201?'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#052e16;color:#4ade80;margin-bottom:12px">Good deal ✓  COC '+fmtPct(coc*100)+'</div>':coc>=0.199?'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#0a2e1a;color:#4ade80;margin-bottom:12px">Meets minimum ✓  COC '+fmtPct(coc*100)+'</div>':coc>=0.10?'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#3b2700;color:#fbbf24;margin-bottom:12px">Borderline — COC '+fmtPct(coc*100)+'</div>':'<div style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;background:#2d0a0a;color:#f87171;margin-bottom:12px">Weak — COC '+fmtPct(coc*100)+'</div>';
 
   content.style.gridTemplateColumns='1fr 1fr';
   content.innerHTML=
