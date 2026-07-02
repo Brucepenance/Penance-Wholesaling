@@ -6487,7 +6487,7 @@ function renderDealViewSF(d,content,summary){
         ${dvDivider()}
         ${dvSection('Monthly breakdown')}
         ${dvRow('Gross rent',fmt(d.sfRent)+'/mo')}
-        ${dvRow('Mgmt / CapEx / expenses',d.sfResultOpex)}
+        ${dvRow('Mgmt / CapEx / expenses (~'+((+d.sfMgmt||10)+(+d.sfCapex||10))+'%)',d.sfResultOpex)}
         ${dvRow('Property taxes','−'+fmt(d.sfTax)+'/mo')}
         ${dvRow('Insurance','−'+fmt(d.sfIns)+'/mo')}
         ${dvRow('Seller payment (P&I)',sfCleanMoney(d.sfResultPmt))}
